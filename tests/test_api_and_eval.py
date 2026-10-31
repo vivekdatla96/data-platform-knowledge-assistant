@@ -1,7 +1,9 @@
 from __future__ import annotations
 
+import asyncio
+
+import httpx
 from conftest import CORPUS, REPO
-from fastapi.testclient import TestClient
 
 from dpka.api import create_app
 from dpka.cli import main
@@ -9,23 +11,30 @@ from dpka.evaluation import evaluate, load_questions
 
 
 def test_api_health_ask_and_ui(assistant):
-    client = TestClient(create_app(assistant=assistant))
+    app = create_app(assistant=assistant)
 
-    health = client.get("/api/health").json()
-    assert health["index"]["documents"] == 12
-    assert "no LLM" in health["provider_label"]
+    async def run_test() -> None:
+        transport = httpx.ASGITransport(app=app)
+        async with httpx.AsyncClient(transport=transport, base_url="http://testserver") as client:
+            health = (await client.get("/api/health")).json()
+            assert health["index"]["documents"] == 12
+            assert "no LLM" in health["provider_label"]
 
-    q = "Is it safe to rerun a failed FACT_ORDERS session?"
-    r = client.post("/api/ask", json={"question": q})
-    assert r.status_code == 200
-    body = r.json()
-    assert body["status"] == "answered" and body["citations"] and body["evidence"]
+            q = "Is it safe to rerun a failed FACT_ORDERS session?"
+            r = await client.post("/api/ask", json={"question": q})
+            assert r.status_code == 200
+            body = r.json()
+            assert body["status"] == "answered" and body["citations"] and body["evidence"]
 
-    assert client.post("/api/ask", json={"question": ""}).status_code == 422
-    assert client.post("/api/ask", json={"question": "x", "top_k": 99}).status_code == 422
+            assert (await client.post("/api/ask", json={"question": ""})).status_code == 422
+            assert (
+                await client.post("/api/ask", json={"question": "x", "top_k": 99})
+            ).status_code == 422
 
-    html = client.get("/").text
-    assert "synthetic" in html and "innerHTML" not in html
+            html = (await client.get("/")).text
+            assert "synthetic" in html and "innerHTML" not in html
+
+    asyncio.run(run_test())
 
 
 def test_eval_labels_point_at_real_documents():
