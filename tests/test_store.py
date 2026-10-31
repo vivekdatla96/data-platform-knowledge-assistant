@@ -71,3 +71,22 @@ def test_valid_float64_vectors_round_trip_as_float32(indexed):
     result = indexed.load_all()[1]
     assert result.dtype == np.float32
     np.testing.assert_array_equal(result, matrix)
+
+
+class _SameNameOtherDim:
+    """Claims the index's model name but produces vectors of a different width."""
+
+    def __init__(self, name: str, dim: int):
+        self.name, self.dim = name, dim
+
+    def embed_query(self, text):  # pragma: no cover - must never be reached
+        return np.ones(self.dim, dtype=np.float32)
+
+
+def test_retriever_rejects_same_name_embedder_with_other_dimension(indexed, embedder):
+    from dpka.retrieval import Retriever
+
+    impostor = _SameNameOtherDim(embedder.name, embedder.dim + 1)
+    with pytest.raises(EmbeddingModelMismatch, match="dimensions"):
+        Retriever(indexed, impostor)
+    assert Retriever(indexed, embedder).search("FACT_ORDERS backfill", k=1)

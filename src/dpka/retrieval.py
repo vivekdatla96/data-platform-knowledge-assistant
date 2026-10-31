@@ -10,7 +10,7 @@ import numpy as np
 
 from dpka.embeddings import Embedder
 from dpka.models import Chunk
-from dpka.store import VectorStore
+from dpka.store import EmbeddingModelMismatch, VectorStore
 from dpka.text import content_terms, tokenize
 
 RRF_K = 60  # standard reciprocal-rank-fusion constant
@@ -68,10 +68,15 @@ class Retriever:
         self.refresh()
 
     def refresh(self) -> None:
+        # Check name and dimension: a same-named embedder with a different dimension would
+        # otherwise fail later inside the similarity matrix product.
         model = self.store.get_meta("embedding_model")
-        if model is not None and model != self.embedder.name:
-            raise RuntimeError(
-                f"index built with {model!r}, query embedder is {self.embedder.name!r}"
+        dim = self.store.get_meta("embedding_dim")
+        if model is not None and (model != self.embedder.name or dim != str(self.embedder.dim)):
+            raise EmbeddingModelMismatch(
+                f"index built with {model!r} ({dim} dimensions), query embedder is "
+                f"{self.embedder.name!r} ({self.embedder.dim} dimensions); "
+                "re-run ingestion with --rebuild"
             )
         self.chunks, self.matrix = self.store.load_all()
         self.bm25 = BM25([tokenize(c.text) for c in self.chunks])
