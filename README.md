@@ -41,7 +41,7 @@ overlap and does not reason about direction.)*
 | Offline answer mode (extractive, no LLM, no API cost) | **Implemented and tested** |
 | AWS Bedrock generation (Converse API, configurable model) | **Implemented; tested only against stubbed AWS responses.** No live Bedrock call was made during development. |
 | Citation verification, abstention, untrusted-content handling | **Implemented and tested.** The injection detector is a regex heuristic, not a security guarantee; see [Trust boundaries](#trust-boundaries). |
-| Web UI + JSON API, CLI, Docker image, GitHub Actions CI | **Implemented.** The Docker build and the CI workflow were written but not executed during development (see [Verification status](#verification-status)). |
+| Web UI + JSON API, CLI, Docker image, GitHub Actions CI | **Implemented and tested.** CI runs lint, tests on Python 3.10 and 3.12, a real-model evaluation, and a Docker build with a container smoke test (see [Verification status](#verification-status)). |
 | Pulling metadata live from Snowflake (`INFORMATION_SCHEMA`, `ACCESS_HISTORY`) | **Proposed, not implemented** |
 | Pulling mappings from an Informatica repository or IDMC API | **Proposed, not implemented** |
 | AWS hosting (ECS Fargate / App Runner, S3 corpus, OpenSearch or pgvector) | **Proposed, not deployed** |
@@ -241,12 +241,20 @@ Run on 2026-10-31 from a clean copy of the project (Windows 11, Python 3.11.18):
 | `dpka eval` (dev and holdout) | numbers in [Evaluation](#evaluation) |
 | API smoke test (`dpka serve`, real HTTP) | `/api/health`, `/api/ask` (answered and abstained), 422 on empty input, UI `GET /` 200 |
 
+GitHub Actions ([first run](https://github.com/vivekdatla96/data-platform-knowledge-assistant/actions/runs/41232054172),
+commit `964e5f2`, Ubuntu): all four jobs passed.
+
+| Job | Result |
+|---|---|
+| `test (3.10)`, `test (3.12)` | lint clean; 66 passed, 2 skipped (real-model tests are opt-in) |
+| `model-eval` (Python 3.11) | real-model tests 2 passed; ingest, both evaluations and the demo completed with the same numbers as the local runs, including the two holdout misses |
+| `docker` | image built; container ingested 12 documents / 54 chunks, `/api/health` responded, and `/api/ask` returned `answered` for the smoke-test question |
+
+Docker was verified only in CI (Linux); the Docker engine was not available on the Windows
+development machine.
+
 Not verified:
 
-* **Docker: unverified.** The Docker engine was not available on the development machine, so
-  the image was never built and the container was never run. The CI `docker` job is written to
-  build it and smoke-test it but has not run.
-* **GitHub Actions:** the workflow has not run (the repository has not been pushed).
 * **AWS Bedrock: mocked only.** The provider is tested against botocore `Stubber` responses
   (request shape, inference profile ARN, optional temperature, throttling, access denied,
   model timeout, guardrail and context-window stops, empty output). No live Bedrock call was
