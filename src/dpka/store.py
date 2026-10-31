@@ -87,14 +87,17 @@ class VectorStore:
 
     def bind_embedding_model(self, name: str, dim: int) -> None:
         """Record which model built the index; refuse to mix vectors from different models."""
+        if isinstance(dim, bool) or not isinstance(dim, int) or dim <= 0:
+            raise ValueError("embedding dimension must be a positive integer")
         existing = self.get_meta("embedding_model")
         if existing is None:
             with self.transaction():
                 self._conn.execute("INSERT INTO meta VALUES ('embedding_model', ?)", (name,))
                 self._conn.execute("INSERT INTO meta VALUES ('embedding_dim', ?)", (str(dim),))
-        elif existing != name:
+        elif existing != name or self.get_meta("embedding_dim") != str(dim):
             raise EmbeddingModelMismatch(
-                f"index was built with {existing!r} but current embedder is {name!r}; "
+                f"index was built with {existing!r} ({self.get_meta('embedding_dim')} dimensions) "
+                f"but current embedder is {name!r} ({dim} dimensions); "
                 "re-run ingestion with --rebuild"
             )
 
@@ -135,8 +138,19 @@ class VectorStore:
         embeddings: np.ndarray,
     ) -> None:
         """Atomically replace a document and all of its chunks."""
-        if len(chunks) != len(embeddings):
-            raise ValueError("chunks and embeddings must have the same length")
+        dimension = self.get_meta("embedding_dim")
+        if dimension is None:
+            raise ValueError("bind an embedding model before storing documents")
+        with np.errstate(over="ignore", invalid="ignore"):
+            embeddings = np.asarray(embeddings, dtype=np.float32)
+        if embeddings.shape != (len(chunks), int(dimension)):
+            raise ValueError("embeddings must have shape (chunk count, bound embedding dimension)")
+        if not np.isfinite(embeddings).all():
+            raise ValueError("embeddings must contain only finite float32 values")
+        if record.chunk_count != len(chunks):
+            raise ValueError("document chunk count must match supplied chunks")
+        if any(chunk.doc_id != record.doc_id for chunk in chunks):
+            raise ValueError("all chunks must belong to the supplied document")
         with self.transaction() as conn:
             conn.execute("DELETE FROM chunks WHERE doc_id = ?", (record.doc_id,))
             conn.execute(
