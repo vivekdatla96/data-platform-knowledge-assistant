@@ -1,0 +1,97 @@
+{
+  "format": "dpka.snowflake_lineage.v1",
+  "note": "SYNTHETIC. Hand-written table and column lineage in a simplified shape. Real Snowflake lineage would come from ACCESS_HISTORY / OBJECT_DEPENDENCIES; this file is not derived from either.",
+  "database": "DEMO_DW",
+  "edges": [
+    {
+      "source": "RAW.ORDERS_STG",
+      "target": "DW.FACT_ORDERS",
+      "process": "m_ORDERS_STG_TO_FACT_ORDERS",
+      "columns": [
+        {"source": "ORDER_ID", "target": "ORDER_ID"},
+        {"source": "ORDER_TS", "target": "ORDER_DATE"},
+        {"source": "ORDER_STATUS", "target": "ORDER_STATUS"},
+        {"source": "ORDER_TOTAL", "target": "GROSS_AMOUNT"},
+        {"source": "ORDER_TOTAL, DISCOUNT_AMT, TAX_AMT", "target": "NET_AMOUNT"},
+        {"source": "UPDATED_AT", "target": "SOURCE_UPDATED_AT"}
+      ]
+    },
+    {
+      "source": "DW.DIM_CUSTOMER",
+      "target": "DW.FACT_ORDERS",
+      "process": "m_ORDERS_STG_TO_FACT_ORDERS (lookup LKP_DIM_CUSTOMER)",
+      "columns": [{"source": "CUSTOMER_SK", "target": "CUSTOMER_SK"}]
+    },
+    {
+      "source": "RAW.CUSTOMERS_STG",
+      "target": "DW.DIM_CUSTOMER",
+      "process": "m_CUSTOMERS_STG_TO_DIM_CUSTOMER_SCD2",
+      "columns": [
+        {"source": "CUSTOMER_ID", "target": "CUSTOMER_ID"},
+        {"source": "CUSTOMER_SEGMENT", "target": "CUSTOMER_SEGMENT"},
+        {"source": "LOYALTY_TIER", "target": "LOYALTY_TIER"},
+        {"source": "REGION", "target": "REGION"},
+        {"source": "SIGNUP_DATE", "target": "SIGNUP_DATE"},
+        {"source": "SNAPSHOT_DATE", "target": "EFFECTIVE_FROM"}
+      ]
+    },
+    {
+      "source": "RAW.PRODUCTS_STG",
+      "target": "DW.DIM_PRODUCT",
+      "process": "m_PRODUCTS_FULL_REFRESH",
+      "columns": [
+        {"source": "PRODUCT_ID", "target": "PRODUCT_ID"},
+        {"source": "PRODUCT_ID", "target": "PRODUCT_SK"},
+        {"source": "PRODUCT_NAME", "target": "PRODUCT_NAME"},
+        {"source": "CATEGORY", "target": "CATEGORY"},
+        {"source": "LIST_PRICE", "target": "LIST_PRICE"},
+        {"source": "IS_ACTIVE", "target": "IS_ACTIVE"}
+      ]
+    },
+    {
+      "source": "RAW.RETURNS_STG",
+      "target": "DW.FACT_RETURNS",
+      "process": "m_RETURNS_STG_TO_FACT_RETURNS",
+      "columns": [
+        {"source": "RETURN_ID", "target": "RETURN_ID"},
+        {"source": "RETURN_QTY", "target": "RETURN_QTY"},
+        {"source": "REFUND_AMT", "target": "REFUND_AMT"},
+        {"source": "RECEIVED_TS", "target": "RETURN_DATE"}
+      ]
+    },
+    {
+      "source": "DW.FACT_ORDERS",
+      "target": "DW.FACT_RETURNS",
+      "process": "m_RETURNS_STG_TO_FACT_RETURNS (lookup LKP_FACT_ORDERS)",
+      "columns": [{"source": "ORDER_SK", "target": "ORDER_SK"}]
+    },
+    {
+      "source": "DW.DIM_PRODUCT",
+      "target": "DW.FACT_RETURNS",
+      "process": "m_RETURNS_STG_TO_FACT_RETURNS (lookup LKP_DIM_PRODUCT)",
+      "columns": [{"source": "PRODUCT_SK", "target": "PRODUCT_SK"}]
+    },
+    {
+      "source": "DW.FACT_ORDERS",
+      "target": "MART.DAILY_SALES",
+      "process": "view definition",
+      "columns": [
+        {"source": "ORDER_DATE", "target": "ORDER_DATE"},
+        {"source": "ORDER_ID", "target": "ORDER_COUNT"},
+        {"source": "NET_AMOUNT", "target": "NET_SALES"}
+      ]
+    },
+    {
+      "source": "DW.DIM_CUSTOMER",
+      "target": "MART.DAILY_SALES",
+      "process": "view definition",
+      "columns": [{"source": "REGION", "target": "REGION"}]
+    },
+    {
+      "source": "DW.FACT_RETURNS",
+      "target": "MART.DAILY_SALES",
+      "process": "view definition",
+      "columns": [{"source": "REFUND_AMT", "target": "NET_SALES"}]
+    }
+  ]
+}

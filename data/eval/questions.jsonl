@@ -1,0 +1,34 @@
+{"id": "q01", "category": "incremental_load", "answerable": true, "question": "How does the FACT_ORDERS incremental load decide which source rows to extract?", "relevant_docs": ["runbooks/incremental_load_fact_orders.md", "informatica/m_ORDERS_STG_TO_FACT_ORDERS.xml"]}
+{"id": "q02", "category": "incremental_load", "answerable": true, "question": "Where is the last extract watermark for incremental jobs stored?", "relevant_docs": ["snowflake/dw_tables.json", "runbooks/incremental_load_fact_orders.md"]}
+{"id": "q03", "category": "incremental_load", "answerable": true, "question": "Why does the orders load use a 120 minute lookback window?", "relevant_docs": ["runbooks/incremental_load_fact_orders.md"]}
+{"id": "q04", "category": "incremental_load", "answerable": true, "question": "How do I backfill FACT_ORDERS for a past date range?", "relevant_docs": ["runbooks/incremental_load_fact_orders.md"]}
+{"id": "q05", "category": "incremental_load", "answerable": true, "question": "Is the watermark advanced when the orders session fails?", "relevant_docs": ["runbooks/incremental_load_fact_orders.md", "informatica/m_ORDERS_STG_TO_FACT_ORDERS.xml", "runbooks/failed_etl_job_triage.md"]}
+{"id": "q06", "category": "incremental_load", "answerable": true, "question": "What does the OVERRIDE_START_TS column do?", "relevant_docs": ["snowflake/dw_tables.json", "runbooks/incremental_load_fact_orders.md"]}
+{"id": "q07", "category": "failed_job", "answerable": true, "question": "What should I do when an ETL session fails with a statement timeout?", "relevant_docs": ["runbooks/failed_etl_job_triage.md", "runbooks/snowflake_warehouse_operations.md"]}
+{"id": "q08", "category": "failed_job", "answerable": true, "question": "Is it safe to rerun a failed FACT_ORDERS session?", "relevant_docs": ["runbooks/incremental_load_fact_orders.md", "runbooks/failed_etl_job_triage.md"]}
+{"id": "q09", "category": "failed_job", "answerable": true, "question": "Who do I escalate to if the same session fails twice in a row?", "relevant_docs": ["runbooks/failed_etl_job_triage.md"]}
+{"id": "q10", "category": "failed_job", "answerable": true, "question": "What causes a duplicate row detected during DML action error in the orders MERGE?", "relevant_docs": ["runbooks/failed_etl_job_triage.md", "informatica/m_ORDERS_STG_TO_FACT_ORDERS.xml"]}
+{"id": "q11", "category": "failed_job", "answerable": true, "question": "Where can I see the error message and rejected row count for a failed run?", "relevant_docs": ["snowflake/dw_tables.json", "runbooks/failed_etl_job_triage.md"]}
+{"id": "q12", "category": "failed_job", "answerable": true, "question": "What happens if the DIM_PRODUCT full refresh fails halfway?", "relevant_docs": ["informatica/m_PRODUCTS_FULL_REFRESH.xml", "runbooks/failed_etl_job_triage.md"]}
+{"id": "q13", "category": "mapping", "answerable": true, "question": "How is NET_AMOUNT calculated in FACT_ORDERS?", "relevant_docs": ["informatica/m_ORDERS_STG_TO_FACT_ORDERS.xml", "snowflake/dw_tables.json"]}
+{"id": "q14", "category": "mapping", "answerable": true, "question": "What value does CUSTOMER_SK get when the customer lookup finds no match?", "relevant_docs": ["informatica/m_ORDERS_STG_TO_FACT_ORDERS.xml", "snowflake/dw_tables.json"]}
+{"id": "q15", "category": "mapping", "answerable": true, "question": "Which source column maps to GROSS_AMOUNT?", "relevant_docs": ["informatica/m_ORDERS_STG_TO_FACT_ORDERS.xml", "snowflake/lineage.json"]}
+{"id": "q16", "category": "mapping", "answerable": true, "question": "Which attributes are tracked as SCD Type 2 in DIM_CUSTOMER?", "relevant_docs": ["informatica/m_CUSTOMERS_STG_TO_DIM_CUSTOMER_SCD2.xml", "runbooks/dim_customer_scd2.md", "snowflake/dw_tables.json"]}
+{"id": "q17", "category": "mapping", "answerable": true, "question": "How is PRODUCT_SK generated so it stays stable across reloads?", "relevant_docs": ["informatica/m_PRODUCTS_FULL_REFRESH.xml", "snowflake/dw_tables.json"]}
+{"id": "q18", "category": "mapping", "answerable": true, "question": "How does the returns mapping avoid loading the same return twice on a rerun?", "relevant_docs": ["informatica/m_RETURNS_STG_TO_FACT_RETURNS.xml"]}
+{"id": "q19", "category": "lineage", "answerable": true, "question": "Which downstream objects depend on DW.FACT_ORDERS?", "relevant_docs": ["snowflake/lineage.json"]}
+{"id": "q20", "category": "lineage", "answerable": true, "question": "What tables does MART.DAILY_SALES read from?", "relevant_docs": ["snowflake/lineage.json", "snowflake/dw_tables.json"]}
+{"id": "q21", "category": "lineage", "answerable": true, "question": "Where does the ORDER_SK in FACT_RETURNS come from?", "relevant_docs": ["informatica/m_RETURNS_STG_TO_FACT_RETURNS.xml", "snowflake/lineage.json", "snowflake/dw_tables.json"]}
+{"id": "q22", "category": "lineage", "answerable": true, "question": "Which raw table feeds DIM_CUSTOMER?", "relevant_docs": ["snowflake/lineage.json", "informatica/m_CUSTOMERS_STG_TO_DIM_CUSTOMER_SCD2.xml"]}
+{"id": "q23", "category": "metadata", "answerable": true, "question": "What is the grain of FACT_RETURNS?", "relevant_docs": ["snowflake/dw_tables.json"]}
+{"id": "q24", "category": "metadata", "answerable": true, "question": "How are partner return files loaded into RAW.RETURNS_STG?", "relevant_docs": ["runbooks/partner_returns_feed.md", "snowflake/raw_tables.json"]}
+{"id": "q25", "category": "metadata", "answerable": true, "question": "What is the auto-suspend setting of the ETL warehouse?", "relevant_docs": ["runbooks/snowflake_warehouse_operations.md"]}
+{"id": "q26", "category": "metadata", "answerable": true, "question": "How do I find customers with more than one current row in DIM_CUSTOMER?", "relevant_docs": ["runbooks/dim_customer_scd2.md"]}
+{"id": "u01", "category": "unanswerable", "answerable": false, "question": "What is the Snowflake account URL for production?", "relevant_docs": []}
+{"id": "u02", "category": "unanswerable", "answerable": false, "question": "How do I reset my Informatica password?", "relevant_docs": []}
+{"id": "u03", "category": "unanswerable", "answerable": false, "question": "Which Kafka topic publishes inventory events?", "relevant_docs": []}
+{"id": "u04", "category": "unanswerable", "answerable": false, "question": "What was last quarter's total revenue?", "relevant_docs": []}
+{"id": "u05", "category": "unanswerable", "answerable": false, "question": "How do I configure row-level security in Tableau dashboards?", "relevant_docs": []}
+{"id": "u06", "category": "unanswerable", "answerable": false, "question": "What is the on-call engineer's phone number?", "relevant_docs": []}
+{"id": "u07", "category": "unanswerable", "answerable": false, "question": "How long are Airflow task logs retained?", "relevant_docs": []}
+{"id": "u08", "category": "unanswerable", "answerable": false, "question": "Which dbt model builds the inventory snapshot table?", "relevant_docs": []}

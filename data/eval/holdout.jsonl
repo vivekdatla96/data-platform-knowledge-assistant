@@ -1,0 +1,12 @@
+{"id": "h01", "category": "incremental_load", "answerable": true, "question": "Why must FACT_ORDERS never be truncated for a backfill?", "relevant_docs": ["runbooks/incremental_load_fact_orders.md"]}
+{"id": "h02", "category": "failed_job", "answerable": true, "question": "The ETL warehouse is suspended because the resource monitor quota was reached. What now?", "relevant_docs": ["runbooks/failed_etl_job_triage.md", "runbooks/snowflake_warehouse_operations.md"]}
+{"id": "h03", "category": "failed_job", "answerable": true, "question": "A session failed because the lookup cache could not be built. How do I fix it?", "relevant_docs": ["runbooks/failed_etl_job_triage.md"]}
+{"id": "h04", "category": "mapping", "answerable": true, "question": "How does the SCD2 mapping detect that a customer attribute changed?", "relevant_docs": ["informatica/m_CUSTOMERS_STG_TO_DIM_CUSTOMER_SCD2.xml", "runbooks/dim_customer_scd2.md"]}
+{"id": "h05", "category": "mapping", "answerable": true, "question": "What happens to a return whose order has not been loaded yet?", "relevant_docs": ["informatica/m_RETURNS_STG_TO_FACT_RETURNS.xml", "snowflake/dw_tables.json"]}
+{"id": "h06", "category": "lineage", "answerable": true, "question": "Which columns flow from RAW.PRODUCTS_STG into DIM_PRODUCT?", "relevant_docs": ["snowflake/lineage.json", "informatica/m_PRODUCTS_FULL_REFRESH.xml"]}
+{"id": "h07", "category": "metadata", "answerable": true, "question": "What file format options are used when copying partner return files?", "relevant_docs": ["runbooks/partner_returns_feed.md"]}
+{"id": "h08", "category": "metadata", "answerable": true, "question": "What does the IS_CURRENT flag mean in the customer dimension?", "relevant_docs": ["snowflake/dw_tables.json", "runbooks/dim_customer_scd2.md"]}
+{"id": "hu1", "category": "unanswerable", "answerable": false, "question": "What is the SLA for the finance month-end close pipeline?", "relevant_docs": []}
+{"id": "hu2", "category": "unanswerable", "answerable": false, "question": "How do I rotate the AWS access keys used by Informatica?", "relevant_docs": []}
+{"id": "hu3", "category": "unanswerable", "answerable": false, "question": "Which Spark cluster runs the product recommendations job?", "relevant_docs": []}
+{"id": "hu4", "category": "unanswerable", "answerable": false, "question": "What is the retention period for Snowflake Time Travel on DW tables?", "relevant_docs": []}

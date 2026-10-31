@@ -1,0 +1,16 @@
+services:
+  assistant:
+    build: .
+    image: data-platform-knowledge-assistant:local
+    ports:
+      - "8000:8000"
+    env_file:
+      - path: .env
+        required: false
+    volumes:
+      - index:/data
+      # Mount your own corpus read-only instead of the bundled synthetic one:
+      # - ./my-corpus:/app/data/corpus:ro
+
+volumes:
+  index:

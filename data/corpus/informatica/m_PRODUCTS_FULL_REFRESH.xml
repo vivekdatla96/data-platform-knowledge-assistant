@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  SYNTHETIC. Simplified mapping export for this demo (format dpka.informatica_mapping.v1).
+  Not a real PowerCenter XML and cannot be imported into Informatica.
+-->
+<MAPPING_EXPORT FORMAT="dpka.informatica_mapping.v1" FOLDER="DEMO_SALES">
+  <MAPPING NAME="m_PRODUCTS_FULL_REFRESH" DESCRIPTION="Nightly full rebuild of DW.DIM_PRODUCT from RAW.PRODUCTS_STG.">
+    <SOURCE NAME="RAW.PRODUCTS_STG" CONNECTION="SF_DEMO_DW"/>
+    <TARGET NAME="DW.DIM_PRODUCT" CONNECTION="SF_DEMO_DW" LOAD_TYPE="TRUNCATE_INSERT" KEY="PRODUCT_ID"/>
+    <TRANSFORMATION NAME="EXP_PRODUCT_SK" TYPE="Expression">
+      <PORT NAME="PRODUCT_SK" EXPRESSION="ABS(HASH(PRODUCT_ID))"/>
+    </TRANSFORMATION>
+    <FIELD_MAPPING SOURCE_FIELD="PRODUCT_ID" TARGET_FIELD="PRODUCT_SK" LOGIC="ABS(HASH(PRODUCT_ID)) so keys stay stable across truncate and reload"/>
+    <FIELD_MAPPING SOURCE_FIELD="PRODUCT_ID" TARGET_FIELD="PRODUCT_ID" LOGIC="passthrough"/>
+    <FIELD_MAPPING SOURCE_FIELD="PRODUCT_NAME" TARGET_FIELD="PRODUCT_NAME" LOGIC="TRIM"/>
+    <FIELD_MAPPING SOURCE_FIELD="CATEGORY" TARGET_FIELD="CATEGORY" LOGIC="UPPER(TRIM(CATEGORY))"/>
+    <FIELD_MAPPING SOURCE_FIELD="LIST_PRICE" TARGET_FIELD="LIST_PRICE" LOGIC="passthrough"/>
+    <FIELD_MAPPING SOURCE_FIELD="IS_ACTIVE" TARGET_FIELD="IS_ACTIVE" LOGIC="passthrough"/>
+    <SESSION NAME="s_m_PRODUCTS_FULL_REFRESH" WORKFLOW="wf_DAILY_SALES" SCHEDULE="daily 01:00 UTC"
+      PRE_SQL="TRUNCATE TABLE DW.DIM_PRODUCT inside the same transaction as the insert, so readers never see an empty table."
+      ON_FAILURE="Transaction rolls back and the previous DIM_PRODUCT contents remain in place. Safe to rerun."/>
+  </MAPPING>
+</MAPPING_EXPORT>

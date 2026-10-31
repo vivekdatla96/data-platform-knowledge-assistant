@@ -1,0 +1,327 @@
+{
+  "config": {
+    "embedder": "fastembed:BAAI/bge-small-en-v1.5",
+    "retrieval_mode": "dense",
+    "provider": "offline-extractive",
+    "min_relevance": 0.68,
+    "min_coverage": 0.3,
+    "python": "3.11.18"
+  },
+  "summary": {
+    "answerable_questions": 8,
+    "unanswerable_questions": 4,
+    "k": 5,
+    "hit_at_1": 0.75,
+    "recall_at_5": 1.0,
+    "mrr": 0.875,
+    "answerable_answered_rate": 0.875,
+    "unanswerable_abstained_rate": 1.0,
+    "cited_docs_in_relevant_set": 0.7619
+  },
+  "by_category": {
+    "failed_job": {
+      "n": 2,
+      "recall_at_5": 1.0,
+      "mrr": 1.0
+    },
+    "incremental_load": {
+      "n": 1,
+      "recall_at_5": 1.0,
+      "mrr": 1.0
+    },
+    "lineage": {
+      "n": 1,
+      "recall_at_5": 1.0,
+      "mrr": 1.0
+    },
+    "mapping": {
+      "n": 2,
+      "recall_at_5": 1.0,
+      "mrr": 0.75
+    },
+    "metadata": {
+      "n": 2,
+      "recall_at_5": 1.0,
+      "mrr": 0.75
+    }
+  },
+  "questions": [
+    {
+      "id": "h01",
+      "category": "incremental_load",
+      "answerable": true,
+      "question": "Why must FACT_ORDERS never be truncated for a backfill?",
+      "retrieved_docs": [
+        "runbooks/incremental_load_fact_orders.md",
+        "informatica/m_ORDERS_STG_TO_FACT_ORDERS.xml",
+        "informatica/m_RETURNS_STG_TO_FACT_RETURNS.xml"
+      ],
+      "hit_at_1": true,
+      "recall_at_k": 1.0,
+      "reciprocal_rank": 1.0,
+      "status": "answered",
+      "gate": {
+        "best_similarity": 0.779,
+        "term_coverage": 0.7125
+      },
+      "cited_docs": [
+        "runbooks/incremental_load_fact_orders.md"
+      ],
+      "citations_in_relevant": 1.0
+    },
+    {
+      "id": "h02",
+      "category": "failed_job",
+      "answerable": true,
+      "question": "The ETL warehouse is suspended because the resource monitor quota was reached. What now?",
+      "retrieved_docs": [
+        "runbooks/snowflake_warehouse_operations.md",
+        "runbooks/failed_etl_job_triage.md"
+      ],
+      "hit_at_1": true,
+      "recall_at_k": 1.0,
+      "reciprocal_rank": 1.0,
+      "status": "answered",
+      "gate": {
+        "best_similarity": 0.7709,
+        "term_coverage": 0.8489
+      },
+      "cited_docs": [
+        "runbooks/failed_etl_job_triage.md",
+        "runbooks/snowflake_warehouse_operations.md"
+      ],
+      "citations_in_relevant": 1.0
+    },
+    {
+      "id": "h03",
+      "category": "failed_job",
+      "answerable": true,
+      "question": "A session failed because the lookup cache could not be built. How do I fix it?",
+      "retrieved_docs": [
+        "runbooks/failed_etl_job_triage.md",
+        "snowflake/dw_tables.json",
+        "runbooks/dim_customer_scd2.md"
+      ],
+      "hit_at_1": true,
+      "recall_at_k": 1.0,
+      "reciprocal_rank": 1.0,
+      "status": "abstained",
+      "gate": {
+        "best_similarity": 0.6276,
+        "term_coverage": 0.6085
+      },
+      "cited_docs": [],
+      "citations_in_relevant": null
+    },
+    {
+      "id": "h04",
+      "category": "mapping",
+      "answerable": true,
+      "question": "How does the SCD2 mapping detect that a customer attribute changed?",
+      "retrieved_docs": [
+        "informatica/m_CUSTOMERS_STG_TO_DIM_CUSTOMER_SCD2.xml",
+        "snowflake/dw_tables.json",
+        "runbooks/dim_customer_scd2.md"
+      ],
+      "hit_at_1": true,
+      "recall_at_k": 1.0,
+      "reciprocal_rank": 1.0,
+      "status": "answered",
+      "gate": {
+        "best_similarity": 0.7678,
+        "term_coverage": 0.7229
+      },
+      "cited_docs": [
+        "informatica/m_CUSTOMERS_STG_TO_DIM_CUSTOMER_SCD2.xml",
+        "snowflake/dw_tables.json"
+      ],
+      "citations_in_relevant": 0.5
+    },
+    {
+      "id": "h05",
+      "category": "mapping",
+      "answerable": true,
+      "question": "What happens to a return whose order has not been loaded yet?",
+      "retrieved_docs": [
+        "runbooks/incremental_load_fact_orders.md",
+        "informatica/m_RETURNS_STG_TO_FACT_RETURNS.xml",
+        "runbooks/partner_returns_feed.md",
+        "snowflake/dw_tables.json"
+      ],
+      "hit_at_1": false,
+      "recall_at_k": 1.0,
+      "reciprocal_rank": 0.5,
+      "status": "answered",
+      "gate": {
+        "best_similarity": 0.6951,
+        "term_coverage": 0.6692
+      },
+      "cited_docs": [
+        "informatica/m_RETURNS_STG_TO_FACT_RETURNS.xml",
+        "runbooks/incremental_load_fact_orders.md",
+        "snowflake/dw_tables.json"
+      ],
+      "citations_in_relevant": 0.6666666666666666
+    },
+    {
+      "id": "h06",
+      "category": "lineage",
+      "answerable": true,
+      "question": "Which columns flow from RAW.PRODUCTS_STG into DIM_PRODUCT?",
+      "retrieved_docs": [
+        "snowflake/lineage.json",
+        "informatica/m_PRODUCTS_FULL_REFRESH.xml",
+        "snowflake/dw_tables.json"
+      ],
+      "hit_at_1": true,
+      "recall_at_k": 1.0,
+      "reciprocal_rank": 1.0,
+      "status": "answered",
+      "gate": {
+        "best_similarity": 0.7836,
+        "term_coverage": 0.6485
+      },
+      "cited_docs": [
+        "snowflake/lineage.json"
+      ],
+      "citations_in_relevant": 1.0
+    },
+    {
+      "id": "h07",
+      "category": "metadata",
+      "answerable": true,
+      "question": "What file format options are used when copying partner return files?",
+      "retrieved_docs": [
+        "runbooks/partner_returns_feed.md",
+        "snowflake/raw_tables.json",
+        "informatica/m_RETURNS_STG_TO_FACT_RETURNS.xml"
+      ],
+      "hit_at_1": true,
+      "recall_at_k": 1.0,
+      "reciprocal_rank": 1.0,
+      "status": "answered",
+      "gate": {
+        "best_similarity": 0.7257,
+        "term_coverage": 0.7385
+      },
+      "cited_docs": [
+        "runbooks/partner_returns_feed.md",
+        "snowflake/raw_tables.json"
+      ],
+      "citations_in_relevant": 0.5
+    },
+    {
+      "id": "h08",
+      "category": "metadata",
+      "answerable": true,
+      "question": "What does the IS_CURRENT flag mean in the customer dimension?",
+      "retrieved_docs": [
+        "informatica/m_CUSTOMERS_STG_TO_DIM_CUSTOMER_SCD2.xml",
+        "snowflake/dw_tables.json",
+        "runbooks/dim_customer_scd2.md"
+      ],
+      "hit_at_1": false,
+      "recall_at_k": 1.0,
+      "reciprocal_rank": 0.5,
+      "status": "answered",
+      "gate": {
+        "best_similarity": 0.691,
+        "term_coverage": 0.6742
+      },
+      "cited_docs": [
+        "informatica/m_CUSTOMERS_STG_TO_DIM_CUSTOMER_SCD2.xml",
+        "runbooks/dim_customer_scd2.md",
+        "snowflake/dw_tables.json"
+      ],
+      "citations_in_relevant": 0.6666666666666666
+    },
+    {
+      "id": "hu1",
+      "category": "unanswerable",
+      "answerable": false,
+      "question": "What is the SLA for the finance month-end close pipeline?",
+      "retrieved_docs": [
+        "runbooks/snowflake_warehouse_operations.md",
+        "informatica/m_CUSTOMERS_STG_TO_DIM_CUSTOMER_SCD2.xml",
+        "snowflake/dw_tables.json",
+        "informatica/m_ORDERS_STG_TO_FACT_ORDERS.xml",
+        "informatica/m_RETURNS_STG_TO_FACT_RETURNS.xml"
+      ],
+      "hit_at_1": false,
+      "recall_at_k": null,
+      "reciprocal_rank": 0.0,
+      "status": "abstained",
+      "gate": {
+        "best_similarity": 0.6039,
+        "term_coverage": 0.0
+      },
+      "cited_docs": [],
+      "citations_in_relevant": null
+    },
+    {
+      "id": "hu2",
+      "category": "unanswerable",
+      "answerable": false,
+      "question": "How do I rotate the AWS access keys used by Informatica?",
+      "retrieved_docs": [
+        "informatica/m_ORDERS_STG_TO_FACT_ORDERS.xml",
+        "informatica/m_RETURNS_STG_TO_FACT_RETURNS.xml",
+        "snowflake/dw_tables.json",
+        "snowflake/raw_tables.json"
+      ],
+      "hit_at_1": false,
+      "recall_at_k": null,
+      "reciprocal_rank": 0.0,
+      "status": "abstained",
+      "gate": {
+        "best_similarity": 0.6579,
+        "term_coverage": 0.1386
+      },
+      "cited_docs": [],
+      "citations_in_relevant": null
+    },
+    {
+      "id": "hu3",
+      "category": "unanswerable",
+      "answerable": false,
+      "question": "Which Spark cluster runs the product recommendations job?",
+      "retrieved_docs": [
+        "informatica/m_PRODUCTS_FULL_REFRESH.xml",
+        "informatica/m_CUSTOMERS_STG_TO_DIM_CUSTOMER_SCD2.xml",
+        "snowflake/lineage.json",
+        "runbooks/snowflake_warehouse_operations.md"
+      ],
+      "hit_at_1": false,
+      "recall_at_k": null,
+      "reciprocal_rank": 0.0,
+      "status": "abstained",
+      "gate": {
+        "best_similarity": 0.5513,
+        "term_coverage": 0.2243
+      },
+      "cited_docs": [],
+      "citations_in_relevant": null
+    },
+    {
+      "id": "hu4",
+      "category": "unanswerable",
+      "answerable": false,
+      "question": "What is the retention period for Snowflake Time Travel on DW tables?",
+      "retrieved_docs": [
+        "runbooks/incremental_load_fact_orders.md",
+        "runbooks/snowflake_warehouse_operations.md",
+        "snowflake/dw_tables.json"
+      ],
+      "hit_at_1": false,
+      "recall_at_k": null,
+      "reciprocal_rank": 0.0,
+      "status": "abstained",
+      "gate": {
+        "best_similarity": 0.7224,
+        "term_coverage": 0.1381
+      },
+      "cited_docs": [],
+      "citations_in_relevant": null
+    }
+  ]
+}

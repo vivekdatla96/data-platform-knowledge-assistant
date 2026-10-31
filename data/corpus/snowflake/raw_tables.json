@@ -1,0 +1,75 @@
+{
+  "format": "dpka.snowflake_metadata.v1",
+  "note": "SYNTHETIC. Simplified shape loosely modeled on Snowflake INFORMATION_SCHEMA.TABLES/COLUMNS. Not a real export and not produced by a Snowflake connection.",
+  "database": "DEMO_DW",
+  "tables": [
+    {
+      "schema": "RAW",
+      "name": "ORDERS_STG",
+      "table_type": "BASE TABLE",
+      "comment": "Landing table for order headers from the demo order-management system. Rows are appended by COPY INTO from the S3 stage @RAW.OMS_STAGE every hour. Updated orders arrive as new rows with a later UPDATED_AT.",
+      "load_pattern": "append (hourly COPY INTO)",
+      "owner_role": "ETL_LOADER",
+      "columns": [
+        {"name": "ORDER_ID", "data_type": "VARCHAR(36)", "nullable": false, "comment": "Natural key of the order in the source system."},
+        {"name": "CUSTOMER_ID", "data_type": "VARCHAR(36)", "nullable": true, "comment": "Natural key of the customer. Can be null for guest checkouts."},
+        {"name": "ORDER_TS", "data_type": "TIMESTAMP_NTZ", "nullable": false, "comment": "When the order was placed (UTC)."},
+        {"name": "ORDER_STATUS", "data_type": "VARCHAR(20)", "nullable": false, "comment": "PLACED, SHIPPED, CANCELLED or RETURNED."},
+        {"name": "ORDER_TOTAL", "data_type": "NUMBER(12,2)", "nullable": false, "comment": "Gross order value including tax, before discounts."},
+        {"name": "DISCOUNT_AMT", "data_type": "NUMBER(12,2)", "nullable": true, "comment": "Total discount applied to the order."},
+        {"name": "TAX_AMT", "data_type": "NUMBER(12,2)", "nullable": true, "comment": "Tax portion of ORDER_TOTAL."},
+        {"name": "UPDATED_AT", "data_type": "TIMESTAMP_NTZ", "nullable": false, "comment": "Source system last-modified timestamp. Drives the incremental extract."},
+        {"name": "_LOADED_AT", "data_type": "TIMESTAMP_NTZ", "nullable": false, "comment": "When COPY INTO loaded the row."}
+      ]
+    },
+    {
+      "schema": "RAW",
+      "name": "CUSTOMERS_STG",
+      "table_type": "BASE TABLE",
+      "comment": "Daily full snapshot of customer profiles from the demo CRM. Contains no direct contact details; only segment and region attributes are shipped.",
+      "load_pattern": "truncate and reload daily",
+      "owner_role": "ETL_LOADER",
+      "columns": [
+        {"name": "CUSTOMER_ID", "data_type": "VARCHAR(36)", "nullable": false, "comment": "Natural key of the customer."},
+        {"name": "CUSTOMER_SEGMENT", "data_type": "VARCHAR(20)", "nullable": false, "comment": "CONSUMER, SMALL_BUSINESS or ENTERPRISE."},
+        {"name": "LOYALTY_TIER", "data_type": "VARCHAR(10)", "nullable": true, "comment": "NONE, SILVER, GOLD or PLATINUM."},
+        {"name": "REGION", "data_type": "VARCHAR(20)", "nullable": false, "comment": "Sales region code."},
+        {"name": "SIGNUP_DATE", "data_type": "DATE", "nullable": false, "comment": "Date the customer account was created."},
+        {"name": "SNAPSHOT_DATE", "data_type": "DATE", "nullable": false, "comment": "Business date of the snapshot."}
+      ]
+    },
+    {
+      "schema": "RAW",
+      "name": "PRODUCTS_STG",
+      "table_type": "BASE TABLE",
+      "comment": "Daily full extract of the product catalog.",
+      "load_pattern": "truncate and reload daily",
+      "owner_role": "ETL_LOADER",
+      "columns": [
+        {"name": "PRODUCT_ID", "data_type": "VARCHAR(20)", "nullable": false, "comment": "Natural key (SKU)."},
+        {"name": "PRODUCT_NAME", "data_type": "VARCHAR(200)", "nullable": false, "comment": "Display name."},
+        {"name": "CATEGORY", "data_type": "VARCHAR(50)", "nullable": false, "comment": "Top-level merchandise category."},
+        {"name": "LIST_PRICE", "data_type": "NUMBER(10,2)", "nullable": false, "comment": "Current list price."},
+        {"name": "IS_ACTIVE", "data_type": "BOOLEAN", "nullable": false, "comment": "False when the SKU is discontinued."}
+      ]
+    },
+    {
+      "schema": "RAW",
+      "name": "RETURNS_STG",
+      "table_type": "BASE TABLE",
+      "comment": "Return records delivered by the demo logistics partner as CSV files. Loaded by COPY INTO from the external stage @RAW.PARTNER_STAGE; see the partner feed onboarding runbook.",
+      "load_pattern": "append (daily COPY INTO)",
+      "owner_role": "ETL_LOADER",
+      "columns": [
+        {"name": "RETURN_ID", "data_type": "VARCHAR(36)", "nullable": false, "comment": "Partner-assigned return identifier."},
+        {"name": "ORDER_ID", "data_type": "VARCHAR(36)", "nullable": false, "comment": "Order the return belongs to."},
+        {"name": "PRODUCT_ID", "data_type": "VARCHAR(20)", "nullable": false, "comment": "Returned SKU."},
+        {"name": "RETURN_QTY", "data_type": "NUMBER(6,0)", "nullable": false, "comment": "Units returned."},
+        {"name": "REFUND_AMT", "data_type": "NUMBER(12,2)", "nullable": false, "comment": "Refund issued to the customer."},
+        {"name": "RETURN_REASON", "data_type": "VARCHAR(40)", "nullable": true, "comment": "Partner reason code."},
+        {"name": "RECEIVED_TS", "data_type": "TIMESTAMP_NTZ", "nullable": false, "comment": "When the partner received the item."},
+        {"name": "_FILE_NAME", "data_type": "VARCHAR(300)", "nullable": false, "comment": "METADATA$FILENAME captured at load time."}
+      ]
+    }
+  ]
+}

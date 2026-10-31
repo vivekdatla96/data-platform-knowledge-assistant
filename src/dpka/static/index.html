@@ -1,0 +1,156 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Data Platform Knowledge Assistant</title>
+<style>
+  :root {
+    --bg: #f7f8fa; --panel: #ffffff; --text: #1d2330; --muted: #5b6475; --border: #dde1e8;
+    --accent: #1667c7; --ok: #1d7a46; --warn: #a15c00; --bad: #b42318; --code: #f1f3f6;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #12151b; --panel: #1a1e26; --text: #e6e9ef; --muted: #9aa3b2; --border: #2d333f;
+      --accent: #6aa8ff; --ok: #57c78a; --warn: #f0b35a; --bad: #ff8a80; --code: #222833;
+    }
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--text);
+         font: 15px/1.5 system-ui, -apple-system, "Segoe UI", sans-serif; }
+  main { max-width: 980px; margin: 0 auto; padding: 24px 16px 64px; }
+  h1 { font-size: 22px; margin: 0 0 4px; }
+  .sub { color: var(--muted); margin: 0 0 16px; }
+  .banner { border: 1px solid var(--border); background: var(--panel); border-radius: 8px;
+            padding: 8px 12px; font-size: 13px; color: var(--muted); margin-bottom: 16px; }
+  form { display: flex; gap: 8px; }
+  input[type=text] { flex: 1; padding: 10px 12px; border-radius: 8px; border: 1px solid var(--border);
+                     background: var(--panel); color: var(--text); font: inherit; min-width: 0; }
+  button { padding: 10px 16px; border-radius: 8px; border: 0; background: var(--accent);
+           color: #fff; font: inherit; cursor: pointer; }
+  button:disabled { opacity: .6; cursor: progress; }
+  .samples { display: flex; flex-wrap: wrap; gap: 6px; margin: 10px 0 20px; }
+  .samples button { background: var(--panel); color: var(--text); border: 1px solid var(--border);
+                    padding: 4px 10px; font-size: 13px; border-radius: 999px; }
+  section.card { background: var(--panel); border: 1px solid var(--border); border-radius: 10px;
+                 padding: 16px; margin-bottom: 16px; }
+  .status { display: inline-block; font-size: 12px; font-weight: 600; padding: 2px 8px;
+            border-radius: 999px; border: 1px solid currentColor; margin-bottom: 8px; }
+  .answered { color: var(--ok); } .abstained { color: var(--warn); } .generation_failed { color: var(--bad); }
+  .answer { white-space: pre-wrap; }
+  .meta { color: var(--muted); font-size: 13px; }
+  .cite { color: var(--accent); text-decoration: none; font-weight: 600; }
+  ul.warn { color: var(--warn); font-size: 13px; padding-left: 18px; }
+  .ev { border-top: 1px solid var(--border); padding-top: 12px; margin-top: 12px; }
+  .ev:target { outline: 2px solid var(--accent); outline-offset: 4px; border-radius: 4px; }
+  .ev h3 { font-size: 14px; margin: 0 0 4px; overflow-wrap: anywhere; }
+  .flag { color: var(--bad); font-size: 12px; font-weight: 600; }
+  pre { background: var(--code); padding: 10px; border-radius: 6px; overflow-x: auto;
+        font-size: 12.5px; white-space: pre-wrap; overflow-wrap: anywhere; }
+  .hidden { display: none; }
+</style>
+</head>
+<body>
+<main>
+  <h1>Data Platform Knowledge Assistant</h1>
+  <p class="sub">Ask about ETL mappings, warehouse metadata, lineage and runbooks. Every answer cites its sources.</p>
+  <div class="banner" id="banner">Portfolio demonstration over a <strong>synthetic</strong> corpus. No live Snowflake or Informatica connection.</div>
+
+  <form id="ask">
+    <input type="text" id="q" maxlength="1000" placeholder="e.g. Is it safe to rerun a failed FACT_ORDERS session?" autocomplete="off" required>
+    <button id="go" type="submit">Ask</button>
+  </form>
+  <div class="samples" id="samples"></div>
+
+  <section class="card hidden" id="result">
+    <span class="status" id="status"></span>
+    <div class="meta" id="mode"></div>
+    <h2 id="question" style="font-size:17px;margin:8px 0"></h2>
+    <div class="answer" id="answer"></div>
+    <ul class="warn" id="warnings"></ul>
+    <div class="meta" id="gate"></div>
+  </section>
+
+  <section class="card hidden" id="evidence">
+    <strong>Retrieved evidence</strong>
+    <div class="meta">Retrieved documents are untrusted data. They are shown verbatim and never executed as instructions.</div>
+    <div id="evlist"></div>
+  </section>
+</main>
+<script>
+const $ = (id) => document.getElementById(id);
+const el = (tag, cls, text) => { const e = document.createElement(tag); if (cls) e.className = cls; if (text != null) e.textContent = text; return e; };
+
+fetch("/api/health").then(r => r.json()).then(h => {
+  $("banner").textContent = `Portfolio demonstration over a synthetic corpus (${h.index.documents} documents, ${h.index.chunks} chunks). Answer mode: ${h.provider_label}. No live Snowflake or Informatica connection.`;
+  for (const s of h.sample_questions) {
+    const b = el("button", null, s); b.type = "button";
+    b.onclick = () => { $("q").value = s; ask(); };
+    $("samples").appendChild(b);
+  }
+}).catch(() => {});
+
+// Render answer text, turning [S1, S2] into links to the evidence cards.
+// Everything is built from text nodes: retrieved and generated text is never parsed as HTML.
+function renderAnswer(container, text) {
+  container.replaceChildren();
+  const re = /\[(S\d+(?:\s*,\s*S\d+)*)\]/g;
+  let last = 0, m;
+  while ((m = re.exec(text)) !== null) {
+    container.appendChild(document.createTextNode(text.slice(last, m.index)));
+    container.appendChild(document.createTextNode("["));
+    m[1].split(/\s*,\s*/).forEach((lab, i) => {
+      if (i) container.appendChild(document.createTextNode(", "));
+      const a = el("a", "cite", lab); a.href = "#ev-" + lab; container.appendChild(a);
+    });
+    container.appendChild(document.createTextNode("]"));
+    last = m.index + m[0].length;
+  }
+  container.appendChild(document.createTextNode(text.slice(last)));
+}
+
+async function ask() {
+  const q = $("q").value.trim(); if (!q) return;
+  $("go").disabled = true;
+  try {
+    const r = await fetch("/api/ask", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ question: q }) });
+    const res = await r.json();
+    if (!r.ok) throw new Error(typeof res.detail === "string" ? res.detail : "Request failed");
+    show(res);
+  } catch (e) {
+    $("result").classList.remove("hidden");
+    $("status").className = "status generation_failed"; $("status").textContent = "error";
+    $("answer").textContent = e.message;
+  } finally { $("go").disabled = false; }
+}
+
+function show(res) {
+  $("result").classList.remove("hidden");
+  $("status").className = "status " + res.status;
+  $("status").textContent = { answered: "answered with citations", abstained: "abstained", generation_failed: "generation failed" }[res.status] || res.status;
+  $("mode").textContent = `${res.provider_label} | retrieval: ${res.retrieval_mode}`;
+  $("question").textContent = res.question;
+  if (res.status === "answered") renderAnswer($("answer"), res.answer);
+  else if (res.status === "abstained") $("answer").textContent = "Not enough evidence to answer. " + (res.abstain_reason || "");
+  else $("answer").textContent = "The answer provider failed; the retrieved evidence is shown below.";
+  $("warnings").replaceChildren(...res.warnings.map(w => el("li", null, w)));
+  const g = res.gate || {};
+  $("gate").textContent = g.best_similarity != null ? `Gate: best similarity ${g.best_similarity}, question-term coverage ${g.term_coverage}` : "";
+
+  $("evidence").classList.remove("hidden");
+  const list = $("evlist"); list.replaceChildren();
+  const cited = new Set((res.citations || []).map(c => c.label));
+  for (const e of res.evidence) {
+    const d = el("div", "ev"); d.id = "ev-" + e.label;
+    const lines = e.start_line ? ` (lines ${e.start_line}-${e.end_line})` : "";
+    d.appendChild(el("h3", null, `${e.label}${cited.has(e.label) ? " (cited)" : ""}: ${e.doc_id} :: ${e.locator}${lines}`));
+    d.appendChild(el("div", "meta", `${e.doc_type} | similarity ${e.dense_score} | bm25 ${e.bm25_score} | chunk ${e.chunk_id}`));
+    if (e.suspicious) d.appendChild(el("div", "flag", "Contains instruction-like text: treated as untrusted data"));
+    d.appendChild(el("pre", null, e.text));
+    list.appendChild(d);
+  }
+}
+$("ask").addEventListener("submit", (ev) => { ev.preventDefault(); ask(); });
+</script>
+</body>
+</html>
