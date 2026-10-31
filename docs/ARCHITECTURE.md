@@ -38,7 +38,7 @@ sequenceDiagram
 | Provenance | Every chunk stores `doc_id` (path relative to the corpus root), `doc_type`, `locator`, Markdown line range, content hash and ingest timestamp. |
 | Repeatability | A file whose SHA-256 is unchanged is skipped without parsing. A changed file is re-parsed; chunks with the same ID and hash reuse their stored embedding; the document is replaced in one transaction. Files missing from disk are deleted from the index. |
 | Bad edits | A file that fails validation is reported. If an earlier version was indexed it is kept ("last known good"), so one malformed edit cannot silently remove a document. |
-| Model safety | The index records the embedding model name; ingesting or querying with a different model raises an error until `--rebuild`. |
+| Model safety | The index records the embedding model name and dimension; ingesting or querying with a different name or dimension raises an error until `--rebuild`. Document writes validate matrix shape, finite float32 values, chunk count and document ownership before changing stored data. Rejected writes preserve the existing document. |
 | Source data | The corpus directory is only read. A test hashes the bundled corpus before and after two ingests. |
 
 ## Embeddings: `BAAI/bge-small-en-v1.5` via fastembed
