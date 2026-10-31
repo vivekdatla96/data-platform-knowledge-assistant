@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  SYNTHETIC. Simplified mapping export for this demo (format dpka.informatica_mapping.v1).
+  Loosely inspired by the structure of an Informatica PowerCenter mapping export, but it is NOT
+  a real PowerCenter XML and cannot be imported into Informatica.
+-->
+<MAPPING_EXPORT FORMAT="dpka.informatica_mapping.v1" FOLDER="DEMO_SALES">
+  <MAPPING NAME="m_ORDERS_STG_TO_FACT_ORDERS" DESCRIPTION="Incremental upsert of order headers from RAW.ORDERS_STG into DW.FACT_ORDERS.">
+    <SOURCE NAME="RAW.ORDERS_STG" CONNECTION="SF_DEMO_DW"/>
+    <TARGET NAME="DW.FACT_ORDERS" CONNECTION="SF_DEMO_DW" LOAD_TYPE="UPSERT" KEY="ORDER_ID"/>
+    <MAPPING_VARIABLE NAME="$$LAST_EXTRACT_TS" DATATYPE="timestamp" AGGREGATION="MAX" DEFAULT="1900-01-01 00:00:00"
+      DESCRIPTION="Read from AUDIT.ETL_CONTROL.LAST_EXTRACT_TS (or OVERRIDE_START_TS when set) by the pre-session SQL."/>
+    <SOURCE_FILTER>UPDATED_AT &gt; DATEADD(minute, -$$LOOKBACK_MINUTES, '$$LAST_EXTRACT_TS')</SOURCE_FILTER>
+    <TRANSFORMATION NAME="SQ_ORDERS_STG" TYPE="Source Qualifier"
+      DESCRIPTION="Applies the source filter and keeps only the latest row per ORDER_ID using QUALIFY ROW_NUMBER() OVER (PARTITION BY ORDER_ID ORDER BY UPDATED_AT DESC) = 1."/>
+    <TRANSFORMATION NAME="EXP_DERIVE_AMOUNTS" TYPE="Expression">
+      <PORT NAME="ORDER_DATE" EXPRESSION="TRUNC(ORDER_TS)"/>
+      <PORT NAME="NET_AMOUNT" EXPRESSION="ORDER_TOTAL - NVL(DISCOUNT_AMT, 0) - NVL(TAX_AMT, 0)"/>
+    </TRANSFORMATION>
+    <TRANSFORMATION NAME="LKP_DIM_CUSTOMER" TYPE="Lookup"
+      DESCRIPTION="Connected lookup on DW.DIM_CUSTOMER with condition CUSTOMER_ID = IN_CUSTOMER_ID AND IS_CURRENT = 'Y'. When no row matches (guest checkout or customer not yet loaded) CUSTOMER_SK defaults to -1, the seeded Unknown customer."/>
+    <TRANSFORMATION NAME="LKP_FACT_ORDERS_EXISTING" TYPE="Lookup"
+      DESCRIPTION="Looks up ORDER_SK in DW.FACT_ORDERS by ORDER_ID to decide insert versus update."/>
+    <TRANSFORMATION NAME="UPD_ORDERS" TYPE="Update Strategy"
+      DESCRIPTION="IIF(ISNULL(LKP_ORDER_SK), DD_INSERT, DD_UPDATE). Rows whose SOURCE_UPDATED_AT is not newer than the existing row are rejected with DD_REJECT so replays never overwrite newer data."/>
+    <FIELD_MAPPING SOURCE_FIELD="ORDER_ID" TARGET_FIELD="ORDER_ID" LOGIC="passthrough"/>
+    <FIELD_MAPPING SOURCE_FIELD="(sequence DW.SEQ_ORDER_SK)" TARGET_FIELD="ORDER_SK" LOGIC="NEXTVAL on insert only; existing rows keep their key"/>
+    <FIELD_MAPPING SOURCE_FIELD="CUSTOMER_ID" TARGET_FIELD="CUSTOMER_SK" LOGIC="LKP_DIM_CUSTOMER; -1 when not found"/>
+    <FIELD_MAPPING SOURCE_FIELD="ORDER_TS" TARGET_FIELD="ORDER_DATE" LOGIC="TRUNC(ORDER_TS)"/>
+    <FIELD_MAPPING SOURCE_FIELD="ORDER_STATUS" TARGET_FIELD="ORDER_STATUS" LOGIC="passthrough"/>
+    <FIELD_MAPPING SOURCE_FIELD="ORDER_TOTAL" TARGET_FIELD="GROSS_AMOUNT" LOGIC="passthrough"/>
+    <FIELD_MAPPING SOURCE_FIELD="ORDER_TOTAL, DISCOUNT_AMT, TAX_AMT" TARGET_FIELD="NET_AMOUNT" LOGIC="ORDER_TOTAL - NVL(DISCOUNT_AMT, 0) - NVL(TAX_AMT, 0)"/>
+    <FIELD_MAPPING SOURCE_FIELD="UPDATED_AT" TARGET_FIELD="SOURCE_UPDATED_AT" LOGIC="passthrough"/>
+    <FIELD_MAPPING SOURCE_FIELD="(session parameter $$ETL_BATCH_ID)" TARGET_FIELD="ETL_BATCH_ID" LOGIC="current run id"/>
+    <SESSION NAME="s_m_ORDERS_STG_TO_FACT_ORDERS" WORKFLOW="wf_DAILY_SALES" SCHEDULE="hourly at :15"
+      PRE_SQL="Reads LAST_EXTRACT_TS, OVERRIDE_START_TS and LOOKBACK_MINUTES (120) from AUDIT.ETL_CONTROL for this job."
+      POST_SQL="On success only: sets LAST_EXTRACT_TS to MAX(SOURCE_UPDATED_AT) loaded, clears OVERRIDE_START_TS and writes AUDIT.JOB_RUN_LOG."
+      ON_FAILURE="Session fails the workflow; the watermark is not advanced."/>
+  </MAPPING>
+</MAPPING_EXPORT>

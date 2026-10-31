@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  SYNTHETIC. Simplified mapping export for this demo (format dpka.informatica_mapping.v1).
+  Not a real PowerCenter XML and cannot be imported into Informatica.
+-->
+<MAPPING_EXPORT FORMAT="dpka.informatica_mapping.v1" FOLDER="DEMO_SALES">
+  <MAPPING NAME="m_RETURNS_STG_TO_FACT_RETURNS" DESCRIPTION="Incremental insert of partner return lines into DW.FACT_RETURNS.">
+    <SOURCE NAME="RAW.RETURNS_STG" CONNECTION="SF_DEMO_DW"/>
+    <TARGET NAME="DW.FACT_RETURNS" CONNECTION="SF_DEMO_DW" LOAD_TYPE="INSERT" KEY="RETURN_ID, PRODUCT_ID"/>
+    <MAPPING_VARIABLE NAME="$$LAST_RECEIVED_TS" DATATYPE="timestamp" AGGREGATION="MAX" DEFAULT="1900-01-01 00:00:00"
+      DESCRIPTION="High-water mark on RECEIVED_TS, stored in AUDIT.ETL_CONTROL."/>
+    <SOURCE_FILTER>RECEIVED_TS &gt; '$$LAST_RECEIVED_TS'</SOURCE_FILTER>
+    <TRANSFORMATION NAME="LKP_FACT_ORDERS" TYPE="Lookup"
+      DESCRIPTION="Looks up ORDER_SK in DW.FACT_ORDERS on ORDER_ID. Returns that arrive before their order get ORDER_SK = -1 and are re-pointed by the weekly late-arriving-orders fix-up job."/>
+    <TRANSFORMATION NAME="LKP_DIM_PRODUCT" TYPE="Lookup"
+      DESCRIPTION="Looks up PRODUCT_SK in DW.DIM_PRODUCT on PRODUCT_ID."/>
+    <TRANSFORMATION NAME="FIL_DUPLICATES" TYPE="Filter"
+      DESCRIPTION="Drops rows whose (RETURN_ID, PRODUCT_ID) already exists in DW.FACT_RETURNS, which makes reruns of the same file idempotent."/>
+    <FIELD_MAPPING SOURCE_FIELD="RETURN_ID" TARGET_FIELD="RETURN_ID" LOGIC="passthrough"/>
+    <FIELD_MAPPING SOURCE_FIELD="PRODUCT_ID" TARGET_FIELD="PRODUCT_SK" LOGIC="LKP_DIM_PRODUCT"/>
+    <FIELD_MAPPING SOURCE_FIELD="ORDER_ID" TARGET_FIELD="ORDER_SK" LOGIC="LKP_FACT_ORDERS; -1 when the order is not loaded yet"/>
+    <FIELD_MAPPING SOURCE_FIELD="RETURN_QTY" TARGET_FIELD="RETURN_QTY" LOGIC="passthrough"/>
+    <FIELD_MAPPING SOURCE_FIELD="REFUND_AMT" TARGET_FIELD="REFUND_AMT" LOGIC="passthrough"/>
+    <FIELD_MAPPING SOURCE_FIELD="RECEIVED_TS" TARGET_FIELD="RETURN_DATE" LOGIC="TRUNC(RECEIVED_TS)"/>
+    <SESSION NAME="s_m_RETURNS_STG_TO_FACT_RETURNS" WORKFLOW="wf_DAILY_SALES" SCHEDULE="daily 03:00 UTC"
+      ON_FAILURE="Session fails; watermark not advanced. Rerun is safe because FIL_DUPLICATES skips rows already loaded."/>
+  </MAPPING>
+</MAPPING_EXPORT>

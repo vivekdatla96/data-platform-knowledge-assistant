@@ -1,0 +1,848 @@
+{
+  "config": {
+    "embedder": "fastembed:BAAI/bge-small-en-v1.5",
+    "retrieval_mode": "dense",
+    "provider": "offline-extractive",
+    "min_relevance": 0.68,
+    "min_coverage": 0.3,
+    "python": "3.11.18"
+  },
+  "summary": {
+    "answerable_questions": 26,
+    "unanswerable_questions": 8,
+    "k": 5,
+    "hit_at_1": 0.8846,
+    "recall_at_5": 0.9423,
+    "mrr": 0.9327,
+    "answerable_answered_rate": 1.0,
+    "unanswerable_abstained_rate": 1.0,
+    "cited_docs_in_relevant_set": 0.8077
+  },
+  "by_category": {
+    "failed_job": {
+      "n": 6,
+      "recall_at_5": 0.9167,
+      "mrr": 0.9167
+    },
+    "incremental_load": {
+      "n": 6,
+      "recall_at_5": 1.0,
+      "mrr": 1.0
+    },
+    "lineage": {
+      "n": 4,
+      "recall_at_5": 0.875,
+      "mrr": 1.0
+    },
+    "mapping": {
+      "n": 6,
+      "recall_at_5": 0.9167,
+      "mrr": 0.7917
+    },
+    "metadata": {
+      "n": 4,
+      "recall_at_5": 1.0,
+      "mrr": 1.0
+    }
+  },
+  "questions": [
+    {
+      "id": "q01",
+      "category": "incremental_load",
+      "answerable": true,
+      "question": "How does the FACT_ORDERS incremental load decide which source rows to extract?",
+      "retrieved_docs": [
+        "runbooks/incremental_load_fact_orders.md",
+        "snowflake/dw_tables.json",
+        "informatica/m_ORDERS_STG_TO_FACT_ORDERS.xml"
+      ],
+      "hit_at_1": true,
+      "recall_at_k": 1.0,
+      "reciprocal_rank": 1.0,
+      "status": "answered",
+      "gate": {
+        "best_similarity": 0.8225,
+        "term_coverage": 1.0
+      },
+      "cited_docs": [
+        "informatica/m_ORDERS_STG_TO_FACT_ORDERS.xml"
+      ],
+      "citations_in_relevant": 1.0
+    },
+    {
+      "id": "q02",
+      "category": "incremental_load",
+      "answerable": true,
+      "question": "Where is the last extract watermark for incremental jobs stored?",
+      "retrieved_docs": [
+        "runbooks/incremental_load_fact_orders.md",
+        "snowflake/dw_tables.json",
+        "informatica/m_RETURNS_STG_TO_FACT_RETURNS.xml",
+        "informatica/m_ORDERS_STG_TO_FACT_ORDERS.xml"
+      ],
+      "hit_at_1": true,
+      "recall_at_k": 1.0,
+      "reciprocal_rank": 1.0,
+      "status": "answered",
+      "gate": {
+        "best_similarity": 0.7633,
+        "term_coverage": 0.6816
+      },
+      "cited_docs": [
+        "runbooks/incremental_load_fact_orders.md",
+        "snowflake/dw_tables.json"
+      ],
+      "citations_in_relevant": 1.0
+    },
+    {
+      "id": "q03",
+      "category": "incremental_load",
+      "answerable": true,
+      "question": "Why does the orders load use a 120 minute lookback window?",
+      "retrieved_docs": [
+        "runbooks/incremental_load_fact_orders.md",
+        "runbooks/snowflake_warehouse_operations.md",
+        "informatica/m_RETURNS_STG_TO_FACT_RETURNS.xml"
+      ],
+      "hit_at_1": true,
+      "recall_at_k": 1.0,
+      "reciprocal_rank": 1.0,
+      "status": "answered",
+      "gate": {
+        "best_similarity": 0.8011,
+        "term_coverage": 1.0
+      },
+      "cited_docs": [
+        "runbooks/incremental_load_fact_orders.md"
+      ],
+      "citations_in_relevant": 1.0
+    },
+    {
+      "id": "q04",
+      "category": "incremental_load",
+      "answerable": true,
+      "question": "How do I backfill FACT_ORDERS for a past date range?",
+      "retrieved_docs": [
+        "runbooks/incremental_load_fact_orders.md",
+        "informatica/m_RETURNS_STG_TO_FACT_RETURNS.xml",
+        "informatica/m_ORDERS_STG_TO_FACT_ORDERS.xml"
+      ],
+      "hit_at_1": true,
+      "recall_at_k": 1.0,
+      "reciprocal_rank": 1.0,
+      "status": "answered",
+      "gate": {
+        "best_similarity": 0.8375,
+        "term_coverage": 1.0
+      },
+      "cited_docs": [
+        "runbooks/incremental_load_fact_orders.md"
+      ],
+      "citations_in_relevant": 1.0
+    },
+    {
+      "id": "q05",
+      "category": "incremental_load",
+      "answerable": true,
+      "question": "Is the watermark advanced when the orders session fails?",
+      "retrieved_docs": [
+        "runbooks/incremental_load_fact_orders.md",
+        "runbooks/failed_etl_job_triage.md",
+        "snowflake/dw_tables.json",
+        "informatica/m_ORDERS_STG_TO_FACT_ORDERS.xml"
+      ],
+      "hit_at_1": true,
+      "recall_at_k": 1.0,
+      "reciprocal_rank": 1.0,
+      "status": "answered",
+      "gate": {
+        "best_similarity": 0.7511,
+        "term_coverage": 1.0
+      },
+      "cited_docs": [
+        "informatica/m_ORDERS_STG_TO_FACT_ORDERS.xml",
+        "runbooks/failed_etl_job_triage.md",
+        "runbooks/incremental_load_fact_orders.md"
+      ],
+      "citations_in_relevant": 1.0
+    },
+    {
+      "id": "q06",
+      "category": "incremental_load",
+      "answerable": true,
+      "question": "What does the OVERRIDE_START_TS column do?",
+      "retrieved_docs": [
+        "snowflake/dw_tables.json",
+        "runbooks/incremental_load_fact_orders.md",
+        "informatica/m_ORDERS_STG_TO_FACT_ORDERS.xml",
+        "snowflake/raw_tables.json"
+      ],
+      "hit_at_1": true,
+      "recall_at_k": 1.0,
+      "reciprocal_rank": 1.0,
+      "status": "answered",
+      "gate": {
+        "best_similarity": 0.697,
+        "term_coverage": 1.0
+      },
+      "cited_docs": [
+        "runbooks/incremental_load_fact_orders.md",
+        "snowflake/dw_tables.json"
+      ],
+      "citations_in_relevant": 1.0
+    },
+    {
+      "id": "q07",
+      "category": "failed_job",
+      "answerable": true,
+      "question": "What should I do when an ETL session fails with a statement timeout?",
+      "retrieved_docs": [
+        "runbooks/snowflake_warehouse_operations.md",
+        "runbooks/failed_etl_job_triage.md"
+      ],
+      "hit_at_1": true,
+      "recall_at_k": 1.0,
+      "reciprocal_rank": 1.0,
+      "status": "answered",
+      "gate": {
+        "best_similarity": 0.8391,
+        "term_coverage": 1.0
+      },
+      "cited_docs": [
+        "runbooks/failed_etl_job_triage.md",
+        "runbooks/snowflake_warehouse_operations.md"
+      ],
+      "citations_in_relevant": 1.0
+    },
+    {
+      "id": "q08",
+      "category": "failed_job",
+      "answerable": true,
+      "question": "Is it safe to rerun a failed FACT_ORDERS session?",
+      "retrieved_docs": [
+        "runbooks/failed_etl_job_triage.md",
+        "runbooks/incremental_load_fact_orders.md",
+        "runbooks/partner_returns_feed.md"
+      ],
+      "hit_at_1": true,
+      "recall_at_k": 1.0,
+      "reciprocal_rank": 1.0,
+      "status": "answered",
+      "gate": {
+        "best_similarity": 0.8085,
+        "term_coverage": 1.0
+      },
+      "cited_docs": [
+        "runbooks/failed_etl_job_triage.md",
+        "runbooks/incremental_load_fact_orders.md"
+      ],
+      "citations_in_relevant": 1.0
+    },
+    {
+      "id": "q09",
+      "category": "failed_job",
+      "answerable": true,
+      "question": "Who do I escalate to if the same session fails twice in a row?",
+      "retrieved_docs": [
+        "runbooks/failed_etl_job_triage.md",
+        "runbooks/dim_customer_scd2.md"
+      ],
+      "hit_at_1": true,
+      "recall_at_k": 1.0,
+      "reciprocal_rank": 1.0,
+      "status": "answered",
+      "gate": {
+        "best_similarity": 0.7423,
+        "term_coverage": 0.635
+      },
+      "cited_docs": [
+        "runbooks/dim_customer_scd2.md",
+        "runbooks/failed_etl_job_triage.md"
+      ],
+      "citations_in_relevant": 0.5
+    },
+    {
+      "id": "q10",
+      "category": "failed_job",
+      "answerable": true,
+      "question": "What causes a duplicate row detected during DML action error in the orders MERGE?",
+      "retrieved_docs": [
+        "runbooks/dim_customer_scd2.md",
+        "runbooks/failed_etl_job_triage.md",
+        "runbooks/incremental_load_fact_orders.md",
+        "snowflake/dw_tables.json",
+        "informatica/m_RETURNS_STG_TO_FACT_RETURNS.xml"
+      ],
+      "hit_at_1": false,
+      "recall_at_k": 0.5,
+      "reciprocal_rank": 0.5,
+      "status": "answered",
+      "gate": {
+        "best_similarity": 0.7915,
+        "term_coverage": 1.0
+      },
+      "cited_docs": [
+        "runbooks/dim_customer_scd2.md",
+        "runbooks/failed_etl_job_triage.md",
+        "runbooks/incremental_load_fact_orders.md"
+      ],
+      "citations_in_relevant": 0.3333333333333333
+    },
+    {
+      "id": "q11",
+      "category": "failed_job",
+      "answerable": true,
+      "question": "Where can I see the error message and rejected row count for a failed run?",
+      "retrieved_docs": [
+        "runbooks/failed_etl_job_triage.md",
+        "snowflake/dw_tables.json",
+        "runbooks/incremental_load_fact_orders.md"
+      ],
+      "hit_at_1": true,
+      "recall_at_k": 1.0,
+      "reciprocal_rank": 1.0,
+      "status": "answered",
+      "gate": {
+        "best_similarity": 0.7739,
+        "term_coverage": 1.0
+      },
+      "cited_docs": [
+        "runbooks/failed_etl_job_triage.md",
+        "runbooks/incremental_load_fact_orders.md",
+        "snowflake/dw_tables.json"
+      ],
+      "citations_in_relevant": 0.6666666666666666
+    },
+    {
+      "id": "q12",
+      "category": "failed_job",
+      "answerable": true,
+      "question": "What happens if the DIM_PRODUCT full refresh fails halfway?",
+      "retrieved_docs": [
+        "informatica/m_PRODUCTS_FULL_REFRESH.xml",
+        "runbooks/failed_etl_job_triage.md",
+        "runbooks/dim_customer_scd2.md"
+      ],
+      "hit_at_1": true,
+      "recall_at_k": 1.0,
+      "reciprocal_rank": 1.0,
+      "status": "answered",
+      "gate": {
+        "best_similarity": 0.7333,
+        "term_coverage": 0.6811
+      },
+      "cited_docs": [
+        "informatica/m_PRODUCTS_FULL_REFRESH.xml",
+        "runbooks/failed_etl_job_triage.md"
+      ],
+      "citations_in_relevant": 1.0
+    },
+    {
+      "id": "q13",
+      "category": "mapping",
+      "answerable": true,
+      "question": "How is NET_AMOUNT calculated in FACT_ORDERS?",
+      "retrieved_docs": [
+        "informatica/m_ORDERS_STG_TO_FACT_ORDERS.xml",
+        "snowflake/dw_tables.json",
+        "informatica/m_RETURNS_STG_TO_FACT_RETURNS.xml"
+      ],
+      "hit_at_1": true,
+      "recall_at_k": 1.0,
+      "reciprocal_rank": 1.0,
+      "status": "answered",
+      "gate": {
+        "best_similarity": 0.7266,
+        "term_coverage": 0.6588
+      },
+      "cited_docs": [
+        "informatica/m_ORDERS_STG_TO_FACT_ORDERS.xml"
+      ],
+      "citations_in_relevant": 1.0
+    },
+    {
+      "id": "q14",
+      "category": "mapping",
+      "answerable": true,
+      "question": "What value does CUSTOMER_SK get when the customer lookup finds no match?",
+      "retrieved_docs": [
+        "informatica/m_RETURNS_STG_TO_FACT_RETURNS.xml",
+        "informatica/m_CUSTOMERS_STG_TO_DIM_CUSTOMER_SCD2.xml",
+        "runbooks/dim_customer_scd2.md",
+        "informatica/m_ORDERS_STG_TO_FACT_ORDERS.xml"
+      ],
+      "hit_at_1": false,
+      "recall_at_k": 0.5,
+      "reciprocal_rank": 0.25,
+      "status": "answered",
+      "gate": {
+        "best_similarity": 0.7015,
+        "term_coverage": 0.5503
+      },
+      "cited_docs": [
+        "informatica/m_CUSTOMERS_STG_TO_DIM_CUSTOMER_SCD2.xml",
+        "informatica/m_ORDERS_STG_TO_FACT_ORDERS.xml"
+      ],
+      "citations_in_relevant": 0.5
+    },
+    {
+      "id": "q15",
+      "category": "mapping",
+      "answerable": true,
+      "question": "Which source column maps to GROSS_AMOUNT?",
+      "retrieved_docs": [
+        "informatica/m_ORDERS_STG_TO_FACT_ORDERS.xml",
+        "informatica/m_RETURNS_STG_TO_FACT_RETURNS.xml",
+        "snowflake/lineage.json"
+      ],
+      "hit_at_1": true,
+      "recall_at_k": 1.0,
+      "reciprocal_rank": 1.0,
+      "status": "answered",
+      "gate": {
+        "best_similarity": 0.7054,
+        "term_coverage": 0.6649
+      },
+      "cited_docs": [
+        "informatica/m_ORDERS_STG_TO_FACT_ORDERS.xml",
+        "snowflake/lineage.json"
+      ],
+      "citations_in_relevant": 1.0
+    },
+    {
+      "id": "q16",
+      "category": "mapping",
+      "answerable": true,
+      "question": "Which attributes are tracked as SCD Type 2 in DIM_CUSTOMER?",
+      "retrieved_docs": [
+        "snowflake/dw_tables.json",
+        "runbooks/dim_customer_scd2.md",
+        "informatica/m_CUSTOMERS_STG_TO_DIM_CUSTOMER_SCD2.xml"
+      ],
+      "hit_at_1": true,
+      "recall_at_k": 1.0,
+      "reciprocal_rank": 1.0,
+      "status": "answered",
+      "gate": {
+        "best_similarity": 0.8068,
+        "term_coverage": 1.0
+      },
+      "cited_docs": [
+        "informatica/m_CUSTOMERS_STG_TO_DIM_CUSTOMER_SCD2.xml",
+        "snowflake/dw_tables.json"
+      ],
+      "citations_in_relevant": 1.0
+    },
+    {
+      "id": "q17",
+      "category": "mapping",
+      "answerable": true,
+      "question": "How is PRODUCT_SK generated so it stays stable across reloads?",
+      "retrieved_docs": [
+        "informatica/m_PRODUCTS_FULL_REFRESH.xml",
+        "snowflake/dw_tables.json",
+        "informatica/m_RETURNS_STG_TO_FACT_RETURNS.xml"
+      ],
+      "hit_at_1": true,
+      "recall_at_k": 1.0,
+      "reciprocal_rank": 1.0,
+      "status": "answered",
+      "gate": {
+        "best_similarity": 0.7983,
+        "term_coverage": 0.8281
+      },
+      "cited_docs": [
+        "informatica/m_PRODUCTS_FULL_REFRESH.xml",
+        "snowflake/dw_tables.json"
+      ],
+      "citations_in_relevant": 1.0
+    },
+    {
+      "id": "q18",
+      "category": "mapping",
+      "answerable": true,
+      "question": "How does the returns mapping avoid loading the same return twice on a rerun?",
+      "retrieved_docs": [
+        "runbooks/incremental_load_fact_orders.md",
+        "informatica/m_RETURNS_STG_TO_FACT_RETURNS.xml",
+        "informatica/m_PRODUCTS_FULL_REFRESH.xml",
+        "runbooks/partner_returns_feed.md"
+      ],
+      "hit_at_1": false,
+      "recall_at_k": 1.0,
+      "reciprocal_rank": 0.5,
+      "status": "answered",
+      "gate": {
+        "best_similarity": 0.709,
+        "term_coverage": 0.6734
+      },
+      "cited_docs": [
+        "informatica/m_RETURNS_STG_TO_FACT_RETURNS.xml",
+        "runbooks/partner_returns_feed.md"
+      ],
+      "citations_in_relevant": 0.5
+    },
+    {
+      "id": "q19",
+      "category": "lineage",
+      "answerable": true,
+      "question": "Which downstream objects depend on DW.FACT_ORDERS?",
+      "retrieved_docs": [
+        "snowflake/lineage.json",
+        "informatica/m_RETURNS_STG_TO_FACT_RETURNS.xml"
+      ],
+      "hit_at_1": true,
+      "recall_at_k": 1.0,
+      "reciprocal_rank": 1.0,
+      "status": "answered",
+      "gate": {
+        "best_similarity": 0.786,
+        "term_coverage": 0.341
+      },
+      "cited_docs": [
+        "snowflake/lineage.json"
+      ],
+      "citations_in_relevant": 1.0
+    },
+    {
+      "id": "q20",
+      "category": "lineage",
+      "answerable": true,
+      "question": "What tables does MART.DAILY_SALES read from?",
+      "retrieved_docs": [
+        "snowflake/dw_tables.json",
+        "snowflake/lineage.json",
+        "snowflake/raw_tables.json"
+      ],
+      "hit_at_1": true,
+      "recall_at_k": 1.0,
+      "reciprocal_rank": 1.0,
+      "status": "answered",
+      "gate": {
+        "best_similarity": 0.7747,
+        "term_coverage": 0.7995
+      },
+      "cited_docs": [
+        "snowflake/lineage.json"
+      ],
+      "citations_in_relevant": 1.0
+    },
+    {
+      "id": "q21",
+      "category": "lineage",
+      "answerable": true,
+      "question": "Where does the ORDER_SK in FACT_RETURNS come from?",
+      "retrieved_docs": [
+        "informatica/m_RETURNS_STG_TO_FACT_RETURNS.xml",
+        "snowflake/dw_tables.json",
+        "informatica/m_ORDERS_STG_TO_FACT_ORDERS.xml",
+        "snowflake/lineage.json"
+      ],
+      "hit_at_1": true,
+      "recall_at_k": 1.0,
+      "reciprocal_rank": 1.0,
+      "status": "answered",
+      "gate": {
+        "best_similarity": 0.8064,
+        "term_coverage": 0.5661
+      },
+      "cited_docs": [
+        "informatica/m_RETURNS_STG_TO_FACT_RETURNS.xml",
+        "snowflake/lineage.json"
+      ],
+      "citations_in_relevant": 1.0
+    },
+    {
+      "id": "q22",
+      "category": "lineage",
+      "answerable": true,
+      "question": "Which raw table feeds DIM_CUSTOMER?",
+      "retrieved_docs": [
+        "snowflake/lineage.json"
+      ],
+      "hit_at_1": true,
+      "recall_at_k": 0.5,
+      "reciprocal_rank": 1.0,
+      "status": "answered",
+      "gate": {
+        "best_similarity": 0.7695,
+        "term_coverage": 0.7833
+      },
+      "cited_docs": [
+        "snowflake/lineage.json"
+      ],
+      "citations_in_relevant": 1.0
+    },
+    {
+      "id": "q23",
+      "category": "metadata",
+      "answerable": true,
+      "question": "What is the grain of FACT_RETURNS?",
+      "retrieved_docs": [
+        "snowflake/dw_tables.json",
+        "informatica/m_RETURNS_STG_TO_FACT_RETURNS.xml",
+        "snowflake/lineage.json"
+      ],
+      "hit_at_1": true,
+      "recall_at_k": 1.0,
+      "reciprocal_rank": 1.0,
+      "status": "answered",
+      "gate": {
+        "best_similarity": 0.7139,
+        "term_coverage": 1.0
+      },
+      "cited_docs": [
+        "informatica/m_RETURNS_STG_TO_FACT_RETURNS.xml",
+        "snowflake/lineage.json"
+      ],
+      "citations_in_relevant": 0.0
+    },
+    {
+      "id": "q24",
+      "category": "metadata",
+      "answerable": true,
+      "question": "How are partner return files loaded into RAW.RETURNS_STG?",
+      "retrieved_docs": [
+        "runbooks/partner_returns_feed.md",
+        "snowflake/raw_tables.json",
+        "informatica/m_RETURNS_STG_TO_FACT_RETURNS.xml"
+      ],
+      "hit_at_1": true,
+      "recall_at_k": 1.0,
+      "reciprocal_rank": 1.0,
+      "status": "answered",
+      "gate": {
+        "best_similarity": 0.7933,
+        "term_coverage": 1.0
+      },
+      "cited_docs": [
+        "informatica/m_RETURNS_STG_TO_FACT_RETURNS.xml",
+        "runbooks/partner_returns_feed.md",
+        "snowflake/raw_tables.json"
+      ],
+      "citations_in_relevant": 0.6666666666666666
+    },
+    {
+      "id": "q25",
+      "category": "metadata",
+      "answerable": true,
+      "question": "What is the auto-suspend setting of the ETL warehouse?",
+      "retrieved_docs": [
+        "runbooks/snowflake_warehouse_operations.md",
+        "runbooks/failed_etl_job_triage.md"
+      ],
+      "hit_at_1": true,
+      "recall_at_k": 1.0,
+      "reciprocal_rank": 1.0,
+      "status": "answered",
+      "gate": {
+        "best_similarity": 0.8147,
+        "term_coverage": 0.7093
+      },
+      "cited_docs": [
+        "runbooks/failed_etl_job_triage.md",
+        "runbooks/snowflake_warehouse_operations.md"
+      ],
+      "citations_in_relevant": 0.5
+    },
+    {
+      "id": "q26",
+      "category": "metadata",
+      "answerable": true,
+      "question": "How do I find customers with more than one current row in DIM_CUSTOMER?",
+      "retrieved_docs": [
+        "runbooks/dim_customer_scd2.md",
+        "informatica/m_CUSTOMERS_STG_TO_DIM_CUSTOMER_SCD2.xml",
+        "snowflake/dw_tables.json"
+      ],
+      "hit_at_1": true,
+      "recall_at_k": 1.0,
+      "reciprocal_rank": 1.0,
+      "status": "answered",
+      "gate": {
+        "best_similarity": 0.7699,
+        "term_coverage": 1.0
+      },
+      "cited_docs": [
+        "informatica/m_CUSTOMERS_STG_TO_DIM_CUSTOMER_SCD2.xml",
+        "runbooks/dim_customer_scd2.md",
+        "snowflake/dw_tables.json"
+      ],
+      "citations_in_relevant": 0.3333333333333333
+    },
+    {
+      "id": "u01",
+      "category": "unanswerable",
+      "answerable": false,
+      "question": "What is the Snowflake account URL for production?",
+      "retrieved_docs": [
+        "snowflake/raw_tables.json",
+        "snowflake/dw_tables.json",
+        "runbooks/partner_returns_feed.md",
+        "runbooks/snowflake_warehouse_operations.md"
+      ],
+      "hit_at_1": false,
+      "recall_at_k": null,
+      "reciprocal_rank": 0.0,
+      "status": "abstained",
+      "gate": {
+        "best_similarity": 0.6831,
+        "term_coverage": 0.3376
+      },
+      "cited_docs": [],
+      "citations_in_relevant": null
+    },
+    {
+      "id": "u02",
+      "category": "unanswerable",
+      "answerable": false,
+      "question": "How do I reset my Informatica password?",
+      "retrieved_docs": [
+        "runbooks/failed_etl_job_triage.md",
+        "snowflake/dw_tables.json",
+        "informatica/m_ORDERS_STG_TO_FACT_ORDERS.xml",
+        "informatica/m_RETURNS_STG_TO_FACT_RETURNS.xml"
+      ],
+      "hit_at_1": false,
+      "recall_at_k": null,
+      "reciprocal_rank": 0.0,
+      "status": "abstained",
+      "gate": {
+        "best_similarity": 0.5484,
+        "term_coverage": 0.5487
+      },
+      "cited_docs": [],
+      "citations_in_relevant": null
+    },
+    {
+      "id": "u03",
+      "category": "unanswerable",
+      "answerable": false,
+      "question": "Which Kafka topic publishes inventory events?",
+      "retrieved_docs": [
+        "snowflake/dw_tables.json",
+        "snowflake/raw_tables.json",
+        "snowflake/lineage.json",
+        "runbooks/snowflake_warehouse_operations.md",
+        "runbooks/incremental_load_fact_orders.md"
+      ],
+      "hit_at_1": false,
+      "recall_at_k": null,
+      "reciprocal_rank": 0.0,
+      "status": "abstained",
+      "gate": {
+        "best_similarity": 0.5704,
+        "term_coverage": 0.0
+      },
+      "cited_docs": [],
+      "citations_in_relevant": null
+    },
+    {
+      "id": "u04",
+      "category": "unanswerable",
+      "answerable": false,
+      "question": "What was last quarter's total revenue?",
+      "retrieved_docs": [
+        "snowflake/dw_tables.json",
+        "informatica/m_RETURNS_STG_TO_FACT_RETURNS.xml",
+        "snowflake/lineage.json"
+      ],
+      "hit_at_1": false,
+      "recall_at_k": null,
+      "reciprocal_rank": 0.0,
+      "status": "abstained",
+      "gate": {
+        "best_similarity": 0.6006,
+        "term_coverage": 0.0
+      },
+      "cited_docs": [],
+      "citations_in_relevant": null
+    },
+    {
+      "id": "u05",
+      "category": "unanswerable",
+      "answerable": false,
+      "question": "How do I configure row-level security in Tableau dashboards?",
+      "retrieved_docs": [
+        "informatica/m_CUSTOMERS_STG_TO_DIM_CUSTOMER_SCD2.xml",
+        "snowflake/dw_tables.json",
+        "runbooks/dim_customer_scd2.md"
+      ],
+      "hit_at_1": false,
+      "recall_at_k": null,
+      "reciprocal_rank": 0.0,
+      "status": "abstained",
+      "gate": {
+        "best_similarity": 0.6405,
+        "term_coverage": 0.039
+      },
+      "cited_docs": [],
+      "citations_in_relevant": null
+    },
+    {
+      "id": "u06",
+      "category": "unanswerable",
+      "answerable": false,
+      "question": "What is the on-call engineer's phone number?",
+      "retrieved_docs": [
+        "runbooks/failed_etl_job_triage.md",
+        "snowflake/dw_tables.json",
+        "snowflake/raw_tables.json",
+        "informatica/m_CUSTOMERS_STG_TO_DIM_CUSTOMER_SCD2.xml"
+      ],
+      "hit_at_1": false,
+      "recall_at_k": null,
+      "reciprocal_rank": 0.0,
+      "status": "abstained",
+      "gate": {
+        "best_similarity": 0.4764,
+        "term_coverage": 0.6398
+      },
+      "cited_docs": [],
+      "citations_in_relevant": null
+    },
+    {
+      "id": "u07",
+      "category": "unanswerable",
+      "answerable": false,
+      "question": "How long are Airflow task logs retained?",
+      "retrieved_docs": [
+        "runbooks/incremental_load_fact_orders.md",
+        "runbooks/snowflake_warehouse_operations.md",
+        "runbooks/partner_returns_feed.md"
+      ],
+      "hit_at_1": false,
+      "recall_at_k": null,
+      "reciprocal_rank": 0.0,
+      "status": "abstained",
+      "gate": {
+        "best_similarity": 0.6706,
+        "term_coverage": 0.0
+      },
+      "cited_docs": [],
+      "citations_in_relevant": null
+    },
+    {
+      "id": "u08",
+      "category": "unanswerable",
+      "answerable": false,
+      "question": "Which dbt model builds the inventory snapshot table?",
+      "retrieved_docs": [
+        "runbooks/dim_customer_scd2.md",
+        "snowflake/dw_tables.json",
+        "snowflake/raw_tables.json",
+        "informatica/m_ORDERS_STG_TO_FACT_ORDERS.xml"
+      ],
+      "hit_at_1": false,
+      "recall_at_k": null,
+      "reciprocal_rank": 0.0,
+      "status": "abstained",
+      "gate": {
+        "best_similarity": 0.6574,
+        "term_coverage": 0.1582
+      },
+      "cited_docs": [],
+      "citations_in_relevant": null
+    }
+  ]
+}

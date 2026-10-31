@@ -1,0 +1,128 @@
+{
+  "format": "dpka.snowflake_metadata.v1",
+  "note": "SYNTHETIC. Simplified shape loosely modeled on Snowflake INFORMATION_SCHEMA.TABLES/COLUMNS. Not a real export and not produced by a Snowflake connection.",
+  "database": "DEMO_DW",
+  "tables": [
+    {
+      "schema": "DW",
+      "name": "FACT_ORDERS",
+      "table_type": "BASE TABLE",
+      "comment": "One row per order (grain: ORDER_ID). Loaded incrementally by mapping m_ORDERS_STG_TO_FACT_ORDERS using an upsert keyed on ORDER_ID. Clustered by ORDER_DATE.",
+      "load_pattern": "incremental upsert (watermark on RAW.ORDERS_STG.UPDATED_AT)",
+      "owner_role": "ETL_TRANSFORMER",
+      "clustering_key": "ORDER_DATE",
+      "columns": [
+        {"name": "ORDER_SK", "data_type": "NUMBER(38,0)", "nullable": false, "comment": "Surrogate key generated from sequence DW.SEQ_ORDER_SK."},
+        {"name": "ORDER_ID", "data_type": "VARCHAR(36)", "nullable": false, "comment": "Natural key; unique."},
+        {"name": "CUSTOMER_SK", "data_type": "NUMBER(38,0)", "nullable": false, "comment": "FK to DW.DIM_CUSTOMER current row. -1 means unknown or guest customer."},
+        {"name": "ORDER_DATE", "data_type": "DATE", "nullable": false, "comment": "Date part of ORDER_TS."},
+        {"name": "ORDER_STATUS", "data_type": "VARCHAR(20)", "nullable": false, "comment": "Latest status from the source."},
+        {"name": "GROSS_AMOUNT", "data_type": "NUMBER(12,2)", "nullable": false, "comment": "ORDER_TOTAL from source."},
+        {"name": "NET_AMOUNT", "data_type": "NUMBER(12,2)", "nullable": false, "comment": "GROSS_AMOUNT minus discount and tax. Derived in EXP_DERIVE_AMOUNTS."},
+        {"name": "SOURCE_UPDATED_AT", "data_type": "TIMESTAMP_NTZ", "nullable": false, "comment": "UPDATED_AT of the source row that produced this version."},
+        {"name": "ETL_BATCH_ID", "data_type": "NUMBER(38,0)", "nullable": false, "comment": "Batch that last wrote the row; joins to AUDIT.JOB_RUN_LOG."}
+      ]
+    },
+    {
+      "schema": "DW",
+      "name": "DIM_CUSTOMER",
+      "table_type": "BASE TABLE",
+      "comment": "Customer dimension kept as SCD Type 2. Exactly one row per CUSTOMER_ID should have IS_CURRENT = 'Y'. Surrogate key -1 is a seeded 'Unknown customer' row.",
+      "load_pattern": "SCD Type 2 (mapping m_CUSTOMERS_STG_TO_DIM_CUSTOMER_SCD2)",
+      "owner_role": "ETL_TRANSFORMER",
+      "columns": [
+        {"name": "CUSTOMER_SK", "data_type": "NUMBER(38,0)", "nullable": false, "comment": "Surrogate key; one per version."},
+        {"name": "CUSTOMER_ID", "data_type": "VARCHAR(36)", "nullable": false, "comment": "Natural key."},
+        {"name": "CUSTOMER_SEGMENT", "data_type": "VARCHAR(20)", "nullable": false, "comment": "Type 2 tracked attribute."},
+        {"name": "LOYALTY_TIER", "data_type": "VARCHAR(10)", "nullable": true, "comment": "Type 2 tracked attribute."},
+        {"name": "REGION", "data_type": "VARCHAR(20)", "nullable": false, "comment": "Type 2 tracked attribute."},
+        {"name": "SIGNUP_DATE", "data_type": "DATE", "nullable": false, "comment": "Type 1 attribute, overwritten in place on all versions."},
+        {"name": "EFFECTIVE_FROM", "data_type": "DATE", "nullable": false, "comment": "First business date this version is valid."},
+        {"name": "EFFECTIVE_TO", "data_type": "DATE", "nullable": false, "comment": "Last business date this version is valid; 9999-12-31 for the current row."},
+        {"name": "IS_CURRENT", "data_type": "CHAR(1)", "nullable": false, "comment": "'Y' for the current version, otherwise 'N'."},
+        {"name": "ROW_HASH", "data_type": "VARCHAR(64)", "nullable": false, "comment": "SHA2 of the tracked attributes, used for change detection."}
+      ]
+    },
+    {
+      "schema": "DW",
+      "name": "DIM_PRODUCT",
+      "table_type": "BASE TABLE",
+      "comment": "Product dimension, SCD Type 1. Fully rebuilt every night from RAW.PRODUCTS_STG by m_PRODUCTS_FULL_REFRESH.",
+      "load_pattern": "full refresh (truncate and insert)",
+      "owner_role": "ETL_TRANSFORMER",
+      "columns": [
+        {"name": "PRODUCT_SK", "data_type": "NUMBER(38,0)", "nullable": false, "comment": "Surrogate key derived as a hash of PRODUCT_ID so it stays stable across rebuilds."},
+        {"name": "PRODUCT_ID", "data_type": "VARCHAR(20)", "nullable": false, "comment": "Natural key (SKU)."},
+        {"name": "PRODUCT_NAME", "data_type": "VARCHAR(200)", "nullable": false, "comment": "Display name."},
+        {"name": "CATEGORY", "data_type": "VARCHAR(50)", "nullable": false, "comment": "Merchandise category."},
+        {"name": "LIST_PRICE", "data_type": "NUMBER(10,2)", "nullable": false, "comment": "List price at last refresh."},
+        {"name": "IS_ACTIVE", "data_type": "BOOLEAN", "nullable": false, "comment": "Discontinued SKUs are kept with IS_ACTIVE = FALSE."}
+      ]
+    },
+    {
+      "schema": "DW",
+      "name": "FACT_RETURNS",
+      "table_type": "BASE TABLE",
+      "comment": "One row per returned line (grain: RETURN_ID + PRODUCT_ID). Loaded incrementally by m_RETURNS_STG_TO_FACT_RETURNS.",
+      "load_pattern": "incremental insert (watermark on RAW.RETURNS_STG.RECEIVED_TS)",
+      "owner_role": "ETL_TRANSFORMER",
+      "columns": [
+        {"name": "RETURN_ID", "data_type": "VARCHAR(36)", "nullable": false, "comment": "Partner return identifier."},
+        {"name": "PRODUCT_SK", "data_type": "NUMBER(38,0)", "nullable": false, "comment": "FK to DW.DIM_PRODUCT."},
+        {"name": "ORDER_SK", "data_type": "NUMBER(38,0)", "nullable": false, "comment": "FK to DW.FACT_ORDERS, looked up on ORDER_ID. -1 when the order has not arrived yet."},
+        {"name": "RETURN_QTY", "data_type": "NUMBER(6,0)", "nullable": false, "comment": "Units returned."},
+        {"name": "REFUND_AMT", "data_type": "NUMBER(12,2)", "nullable": false, "comment": "Refund amount."},
+        {"name": "RETURN_DATE", "data_type": "DATE", "nullable": false, "comment": "Date part of RECEIVED_TS."}
+      ]
+    },
+    {
+      "schema": "MART",
+      "name": "DAILY_SALES",
+      "table_type": "VIEW",
+      "comment": "Daily sales by region and product category. Secure view over DW.FACT_ORDERS, DW.DIM_CUSTOMER and DW.FACT_RETURNS; net sales subtract refunds.",
+      "load_pattern": "view (no load)",
+      "owner_role": "ANALYTICS_READER",
+      "columns": [
+        {"name": "ORDER_DATE", "data_type": "DATE", "nullable": false, "comment": "Business date."},
+        {"name": "REGION", "data_type": "VARCHAR(20)", "nullable": false, "comment": "From DIM_CUSTOMER current row."},
+        {"name": "ORDER_COUNT", "data_type": "NUMBER(18,0)", "nullable": false, "comment": "Orders excluding CANCELLED."},
+        {"name": "NET_SALES", "data_type": "NUMBER(18,2)", "nullable": false, "comment": "Sum of NET_AMOUNT minus REFUND_AMT."}
+      ]
+    },
+    {
+      "schema": "AUDIT",
+      "name": "ETL_CONTROL",
+      "table_type": "BASE TABLE",
+      "comment": "One row per incremental job holding its high-water mark. The watermark is only advanced after the target load commits successfully.",
+      "load_pattern": "updated by post-session SQL",
+      "owner_role": "ETL_TRANSFORMER",
+      "columns": [
+        {"name": "JOB_NAME", "data_type": "VARCHAR(100)", "nullable": false, "comment": "Mapping or session name."},
+        {"name": "LAST_EXTRACT_TS", "data_type": "TIMESTAMP_NTZ", "nullable": false, "comment": "High-water mark: max source timestamp loaded by the last successful run."},
+        {"name": "OVERRIDE_START_TS", "data_type": "TIMESTAMP_NTZ", "nullable": true, "comment": "When set, the next run extracts from this timestamp instead of LAST_EXTRACT_TS (used for backfills). Cleared after a successful run."},
+        {"name": "LOOKBACK_MINUTES", "data_type": "NUMBER(6,0)", "nullable": false, "comment": "Overlap subtracted from the watermark to catch late-committed source rows."},
+        {"name": "UPDATED_AT", "data_type": "TIMESTAMP_NTZ", "nullable": false, "comment": "When the control row last changed."}
+      ]
+    },
+    {
+      "schema": "AUDIT",
+      "name": "JOB_RUN_LOG",
+      "table_type": "BASE TABLE",
+      "comment": "One row per session run: status, row counts and error text. Written by the workflow's post-session commands.",
+      "load_pattern": "append",
+      "owner_role": "ETL_TRANSFORMER",
+      "columns": [
+        {"name": "ETL_BATCH_ID", "data_type": "NUMBER(38,0)", "nullable": false, "comment": "Run identifier."},
+        {"name": "JOB_NAME", "data_type": "VARCHAR(100)", "nullable": false, "comment": "Session name."},
+        {"name": "STATUS", "data_type": "VARCHAR(10)", "nullable": false, "comment": "SUCCEEDED, FAILED or ABORTED."},
+        {"name": "ROWS_READ", "data_type": "NUMBER(18,0)", "nullable": true, "comment": "Source rows read."},
+        {"name": "ROWS_INSERTED", "data_type": "NUMBER(18,0)", "nullable": true, "comment": "Target rows inserted."},
+        {"name": "ROWS_UPDATED", "data_type": "NUMBER(18,0)", "nullable": true, "comment": "Target rows updated."},
+        {"name": "ROWS_REJECTED", "data_type": "NUMBER(18,0)", "nullable": true, "comment": "Rows written to the reject file."},
+        {"name": "ERROR_MESSAGE", "data_type": "VARCHAR(4000)", "nullable": true, "comment": "First error reported by the session."},
+        {"name": "STARTED_AT", "data_type": "TIMESTAMP_NTZ", "nullable": false, "comment": "Run start."},
+        {"name": "ENDED_AT", "data_type": "TIMESTAMP_NTZ", "nullable": true, "comment": "Run end."}
+      ]
+    }
+  ]
+}

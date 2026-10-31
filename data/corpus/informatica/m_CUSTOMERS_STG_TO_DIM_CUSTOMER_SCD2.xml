@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  SYNTHETIC. Simplified mapping export for this demo (format dpka.informatica_mapping.v1).
+  Not a real PowerCenter XML and cannot be imported into Informatica.
+-->
+<MAPPING_EXPORT FORMAT="dpka.informatica_mapping.v1" FOLDER="DEMO_SALES">
+  <MAPPING NAME="m_CUSTOMERS_STG_TO_DIM_CUSTOMER_SCD2" DESCRIPTION="Maintains DW.DIM_CUSTOMER as SCD Type 2 from the daily CRM snapshot in RAW.CUSTOMERS_STG.">
+    <SOURCE NAME="RAW.CUSTOMERS_STG" CONNECTION="SF_DEMO_DW"/>
+    <TARGET NAME="DW.DIM_CUSTOMER" CONNECTION="SF_DEMO_DW" LOAD_TYPE="SCD2" KEY="CUSTOMER_ID"/>
+    <TRANSFORMATION NAME="EXP_ROW_HASH" TYPE="Expression">
+      <PORT NAME="NEW_ROW_HASH" EXPRESSION="SHA2(CUSTOMER_SEGMENT || '|' || NVL(LOYALTY_TIER, '') || '|' || REGION, 256)"/>
+    </TRANSFORMATION>
+    <TRANSFORMATION NAME="LKP_DIM_CUSTOMER_CURRENT" TYPE="Lookup"
+      DESCRIPTION="Looks up the current version (IS_CURRENT = 'Y') by CUSTOMER_ID and returns CUSTOMER_SK and ROW_HASH."/>
+    <TRANSFORMATION NAME="RTR_CHANGE_TYPE" TYPE="Router"
+      DESCRIPTION="Groups: NEW when no current row exists; CHANGED when ROW_HASH differs from NEW_ROW_HASH; UNCHANGED otherwise (dropped). Only CUSTOMER_SEGMENT, LOYALTY_TIER and REGION are Type 2 tracked. SIGNUP_DATE is Type 1 and is overwritten on every version."/>
+    <TRANSFORMATION NAME="UPD_EXPIRE_OLD" TYPE="Update Strategy"
+      DESCRIPTION="For CHANGED rows: DD_UPDATE the old version setting EFFECTIVE_TO = SNAPSHOT_DATE - 1 and IS_CURRENT = 'N'."/>
+    <TRANSFORMATION NAME="UPD_INSERT_NEW" TYPE="Update Strategy"
+      DESCRIPTION="For NEW and CHANGED rows: DD_INSERT a new version with EFFECTIVE_FROM = SNAPSHOT_DATE, EFFECTIVE_TO = 9999-12-31 and IS_CURRENT = 'Y'."/>
+    <FIELD_MAPPING SOURCE_FIELD="(sequence DW.SEQ_CUSTOMER_SK)" TARGET_FIELD="CUSTOMER_SK" LOGIC="NEXTVAL for every inserted version"/>
+    <FIELD_MAPPING SOURCE_FIELD="CUSTOMER_ID" TARGET_FIELD="CUSTOMER_ID" LOGIC="passthrough"/>
+    <FIELD_MAPPING SOURCE_FIELD="CUSTOMER_SEGMENT" TARGET_FIELD="CUSTOMER_SEGMENT" LOGIC="passthrough (Type 2)"/>
+    <FIELD_MAPPING SOURCE_FIELD="LOYALTY_TIER" TARGET_FIELD="LOYALTY_TIER" LOGIC="passthrough (Type 2)"/>
+    <FIELD_MAPPING SOURCE_FIELD="REGION" TARGET_FIELD="REGION" LOGIC="passthrough (Type 2)"/>
+    <FIELD_MAPPING SOURCE_FIELD="SIGNUP_DATE" TARGET_FIELD="SIGNUP_DATE" LOGIC="passthrough (Type 1)"/>
+    <FIELD_MAPPING SOURCE_FIELD="SNAPSHOT_DATE" TARGET_FIELD="EFFECTIVE_FROM" LOGIC="SNAPSHOT_DATE of the change"/>
+    <FIELD_MAPPING SOURCE_FIELD="(constant)" TARGET_FIELD="EFFECTIVE_TO" LOGIC="9999-12-31 on insert; SNAPSHOT_DATE - 1 on expiry"/>
+    <FIELD_MAPPING SOURCE_FIELD="(constant)" TARGET_FIELD="IS_CURRENT" LOGIC="'Y' on insert; 'N' on expiry"/>
+    <FIELD_MAPPING SOURCE_FIELD="CUSTOMER_SEGMENT, LOYALTY_TIER, REGION" TARGET_FIELD="ROW_HASH" LOGIC="EXP_ROW_HASH.NEW_ROW_HASH"/>
+    <SESSION NAME="s_m_CUSTOMERS_STG_TO_DIM_CUSTOMER_SCD2" WORKFLOW="wf_DAILY_SALES" SCHEDULE="daily 01:30 UTC"
+      ON_FAILURE="Fails the workflow before the orders session runs, so orders never look up a half-updated dimension."/>
+  </MAPPING>
+</MAPPING_EXPORT>
