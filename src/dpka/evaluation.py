@@ -112,6 +112,8 @@ def evaluate(assistant: Assistant, questions: list[EvalQuestion], k: int = 5) ->
             "provider": assistant.provider.name,
             "min_relevance": assistant.min_relevance,
             "min_coverage": assistant.min_coverage,
+            "reranker": getattr(assistant.retriever.reranker, "name", None),
+            "min_rerank_score": assistant.min_rerank_score,
             "python": platform.python_version(),
         },
         "summary": summary,
@@ -125,8 +127,9 @@ def to_markdown(report: dict[str, Any]) -> str:
     k = s["k"]
     lines = [
         f"Embedder `{c['embedder']}`, retrieval `{c['retrieval_mode']}`, provider "
-        f"`{c['provider']}`, gate: similarity >= {c['min_relevance']}, coverage >= "
-        f"{c['min_coverage']}",
+        f"`{c['provider']}`, reranker `{c['reranker'] or 'none'}`, gate: similarity >= "
+        f"{c['min_relevance']} and coverage >= {c['min_coverage']}"
+        + (f", or reranker score >= {c['min_rerank_score']}" if c["reranker"] else ""),
         "",
         "| Metric | Value |",
         "|---|---|",

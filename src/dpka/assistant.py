@@ -11,6 +11,7 @@ from dpka.config import Settings
 from dpka.embeddings import build_embedder
 from dpka.prompting import INSUFFICIENT, Evidence
 from dpka.providers import AnswerProvider, ProviderError, build_provider
+from dpka.reranker import build_reranker
 from dpka.retrieval import RetrievedChunk, Retriever
 from dpka.store import VectorStore
 
@@ -49,6 +50,7 @@ def _evidence_dict(label: str, hit: RetrievedChunk) -> dict[str, Any]:
         "end_line": c.end_line,
         "dense_score": round(hit.dense_score, 4),
         "bm25_score": round(hit.bm25_score, 3),
+        "rerank_score": None if hit.rerank_score is None else round(hit.rerank_score, 3),
         "suspicious": c.suspicious,
         "text": c.text,
     }
@@ -63,24 +65,33 @@ class Assistant:
         top_k: int = 5,
         min_relevance: float = 0.5,
         min_coverage: float = 0.6,
+        min_rerank_score: float = 0.0,
     ):
         self.retriever = retriever
         self.provider = provider
         self.top_k = top_k
         self.min_relevance = min_relevance
         self.min_coverage = min_coverage
+        self.min_rerank_score = min_rerank_score
 
     @classmethod
     def from_settings(cls, settings: Settings) -> Assistant:
         store = VectorStore(settings.index_path)
         embedder = build_embedder(settings.embedding_backend, settings.embedding_model)
-        retriever = Retriever(store, embedder, settings.retrieval_mode)
+        retriever = Retriever(
+            store,
+            embedder,
+            settings.retrieval_mode,
+            reranker=build_reranker(settings.reranker_model),
+            rerank_candidates=settings.rerank_candidates,
+        )
         return cls(
             retriever,
             build_provider(settings),
             top_k=settings.top_k,
             min_relevance=settings.min_relevance,
             min_coverage=settings.min_coverage,
+            min_rerank_score=settings.min_rerank_score,
         )
 
     def ask(self, question: str, top_k: int | None = None) -> AnswerResult:
@@ -114,12 +125,23 @@ class Assistant:
         coverage = self.retriever.coverage(question, hits)
         result.timings_ms["retrieval"] = round((time.perf_counter() - t0) * 1000, 1)
         result.gate = {"best_similarity": round(best, 4), "term_coverage": round(coverage, 4)}
-        if best < self.min_relevance or coverage < self.min_coverage:
-            result.abstain_reason = (
-                f"Insufficient evidence: best similarity {best:.2f} (min "
-                f"{self.min_relevance:.2f}), question-term coverage {coverage:.2f} "
-                f"(min {self.min_coverage:.2f})."
-            )
+        passed = best >= self.min_relevance and coverage >= self.min_coverage
+        reasons = (
+            f"best similarity {best:.2f} (min {self.min_relevance:.2f}), question-term "
+            f"coverage {coverage:.2f} (min {self.min_coverage:.2f})"
+        )
+        rerank = [h.rerank_score for h in hits if h.rerank_score is not None]
+        if rerank:
+            # The reranker can only rescue a question the first gate rejected; it never vetoes
+            # one the first gate accepted.
+            best_rerank = max(rerank)
+            result.gate["best_rerank_score"] = round(best_rerank, 3)
+            if not passed and best_rerank >= self.min_rerank_score:
+                passed = True
+                result.gate["rescued_by_reranker"] = 1.0
+            reasons += f", best reranker score {best_rerank:.2f} (min {self.min_rerank_score:.2f})"
+        if not passed:
+            result.abstain_reason = f"Insufficient evidence: {reasons}."
             return result
 
         evidence = [Evidence(lab, h.chunk) for lab, h in labeled]

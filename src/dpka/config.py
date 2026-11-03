@@ -33,6 +33,14 @@ class Settings:
     min_relevance: float = 0.68
     min_coverage: float = 0.3
 
+    # Optional cross-encoder reranking of the top `rerank_candidates` hybrid results. "none"
+    # disables it. When enabled, a question the gate above rejects is still answered if the best
+    # reranker logit is >= `min_rerank_score`. 0.0 is the model's own 50% relevance point; it was
+    # fixed before the holdout set was evaluated, not tuned on it.
+    reranker_model: str = "Xenova/ms-marco-MiniLM-L-6-v2"
+    rerank_candidates: int = 10
+    min_rerank_score: float = 0.0
+
     llm_provider: str = "offline"
     bedrock_model_id: str = ""
     aws_region: str = "us-east-1"
@@ -51,6 +59,9 @@ class Settings:
             raise ValueError(f"DPKA_LLM_PROVIDER must be one of {LLM_PROVIDERS}")
         if not 1 <= self.top_k <= 20:
             raise ValueError("DPKA_TOP_K must be between 1 and 20")
+        # The retriever reranks max(top_k, rerank_candidates) chunks, so a smaller pool is safe.
+        if not 1 <= self.rerank_candidates <= 100:
+            raise ValueError("DPKA_RERANK_CANDIDATES must be between 1 and 100")
         if self.llm_provider == "bedrock" and not self.bedrock_model_id:
             raise ValueError("DPKA_BEDROCK_MODEL_ID is required when DPKA_LLM_PROVIDER=bedrock")
 

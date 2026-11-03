@@ -71,6 +71,11 @@ backend.
 * **Hybrid (default):** reciprocal rank fusion (k = 60) of the two rankings. A chunk with no
   keyword overlap gets no BM25 credit. On the dev set this improved Hit@1 from 0.88 to 0.92 over
   dense only (see [EVALUATION.md](EVALUATION.md)).
+* **Cross-encoder reranking (default, optional):** the top 10 fused candidates are re-scored by
+  `Xenova/ms-marco-MiniLM-L-6-v2`, which reads the question and passage together, and the best 5
+  are kept. On the dev set this raised Hit@1 from 0.92 to 0.96; on the holdout set it ranked the
+  labeled source lower on two questions. It adds about 1 s per question on a laptop CPU.
+  `DPKA_RERANKER_MODEL=none` turns it off.
 
 ## Abstention
 
@@ -79,6 +84,10 @@ Two signals, both shown in every response under `gate`:
 1. **Best dense similarity** among the retrieved chunks (default minimum 0.68).
 2. **Question-term coverage:** IDF-weighted share of the question's content words that appear in
    the retrieved text. Words that never occur in the corpus get the highest weight (minimum 0.30).
+
+With reranking enabled, a third signal can only *rescue* a question: if the gate above fails but
+the best reranker logit is >= 0 (the model's 50% relevance point, not tuned on this data), the
+question is answered. A low reranker score never rejects a question the gate accepted.
 
 After the gate, the provider can still answer `INSUFFICIENT_EVIDENCE`, and an answer that cites no
 retrieved evidence is withheld. The thresholds are tuned on the dev set and are known to

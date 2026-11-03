@@ -1,4 +1,4 @@
-"""Dense and hybrid (dense + BM25) retrieval over the local index."""
+"""Dense and hybrid (dense + BM25) retrieval, with optional cross-encoder reranking."""
 
 from __future__ import annotations
 
@@ -10,6 +10,7 @@ import numpy as np
 
 from dpka.embeddings import Embedder
 from dpka.models import Chunk
+from dpka.reranker import Reranker
 from dpka.store import EmbeddingModelMismatch, VectorStore
 from dpka.text import content_terms, tokenize
 
@@ -23,6 +24,7 @@ class RetrievedChunk:
     bm25_score: float
     fused_score: float
     rank: int
+    rerank_score: float | None = None  # cross-encoder logit, when reranking is enabled
 
 
 def _ranks(scores: np.ndarray) -> np.ndarray:
@@ -61,10 +63,19 @@ class BM25:
 class Retriever:
     """Loads the index into memory once; call :meth:`refresh` after re-ingesting."""
 
-    def __init__(self, store: VectorStore, embedder: Embedder, mode: str = "hybrid"):
+    def __init__(
+        self,
+        store: VectorStore,
+        embedder: Embedder,
+        mode: str = "hybrid",
+        *,
+        reranker: Reranker | None = None,
+        rerank_candidates: int = 10,
+    ):
         if mode not in ("dense", "hybrid"):
             raise ValueError(f"unknown retrieval mode {mode!r}")
         self.store, self.embedder, self.mode = store, embedder, mode
+        self.reranker, self.rerank_candidates = reranker, rerank_candidates
         self.refresh()
 
     def refresh(self) -> None:
@@ -95,10 +106,27 @@ class Retriever:
             fused = 1.0 / (RRF_K + _ranks(dense))
             fused += np.where(bm25 > 0, 1.0 / (RRF_K + _ranks(bm25)), 0.0)
 
-        top = np.argsort(-fused, kind="stable")[:k]
+        if self.reranker is None:
+            top = np.argsort(-fused, kind="stable")[:k]
+            return [
+                RetrievedChunk(self.chunks[i], float(dense[i]), float(bm25[i]), float(fused[i]), r)
+                for r, i in enumerate(top, start=1)
+            ]
+
+        # Rerank a wider candidate pool with the cross-encoder, then keep the best k.
+        pool = np.argsort(-fused, kind="stable")[: max(k, self.rerank_candidates)]
+        ce = self.reranker.score(query, [self.chunks[i].text for i in pool])
+        order = np.argsort(-ce, kind="stable")[:k]
         return [
-            RetrievedChunk(self.chunks[i], float(dense[i]), float(bm25[i]), float(fused[i]), r)
-            for r, i in enumerate(top, start=1)
+            RetrievedChunk(
+                self.chunks[pool[j]],
+                float(dense[pool[j]]),
+                float(bm25[pool[j]]),
+                float(fused[pool[j]]),
+                r,
+                float(ce[j]),
+            )
+            for r, j in enumerate(order, start=1)
         ]
 
     def coverage(self, query: str, hits: list[RetrievedChunk]) -> float:

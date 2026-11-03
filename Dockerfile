@@ -1,5 +1,5 @@
 # Data Platform Knowledge Assistant: offline demo image.
-# The embedding model is downloaded at build time so the container starts without network access.
+# The embedding and reranker models are downloaded at build time so the container starts without network access.
 FROM python:3.11-slim
 
 ENV PYTHONDONTWRITEBYTECODE=1 \
@@ -14,7 +14,8 @@ WORKDIR /app
 COPY pyproject.toml README.md ./
 COPY src ./src
 RUN pip install ".[bedrock]" \
- && python -c "from fastembed import TextEmbedding; TextEmbedding('BAAI/bge-small-en-v1.5', cache_dir='/opt/models')"
+ && python -c "from fastembed import TextEmbedding; TextEmbedding('BAAI/bge-small-en-v1.5', cache_dir='/opt/models')" \
+ && python -c "from fastembed.rerank.cross_encoder import TextCrossEncoder; TextCrossEncoder('Xenova/ms-marco-MiniLM-L-6-v2', cache_dir='/opt/models')"
 
 COPY data ./data
 

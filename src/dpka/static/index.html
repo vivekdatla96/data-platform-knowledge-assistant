@@ -135,7 +135,8 @@ function show(res) {
   else $("answer").textContent = "The answer provider failed; the retrieved evidence is shown below.";
   $("warnings").replaceChildren(...res.warnings.map(w => el("li", null, w)));
   const g = res.gate || {};
-  $("gate").textContent = g.best_similarity != null ? `Gate: best similarity ${g.best_similarity}, question-term coverage ${g.term_coverage}` : "";
+  const rrGate = g.best_rerank_score != null ? `, best reranker score ${g.best_rerank_score}${g.rescued_by_reranker ? " (answered on the reranker score)" : ""}` : "";
+  $("gate").textContent = g.best_similarity != null ? `Gate: best similarity ${g.best_similarity}, question-term coverage ${g.term_coverage}${rrGate}` : "";
 
   $("evidence").classList.remove("hidden");
   const list = $("evlist"); list.replaceChildren();
@@ -144,7 +145,8 @@ function show(res) {
     const d = el("div", "ev"); d.id = "ev-" + e.label;
     const lines = e.start_line ? ` (lines ${e.start_line}-${e.end_line})` : "";
     d.appendChild(el("h3", null, `${e.label}${cited.has(e.label) ? " (cited)" : ""}: ${e.doc_id} :: ${e.locator}${lines}`));
-    d.appendChild(el("div", "meta", `${e.doc_type} | similarity ${e.dense_score} | bm25 ${e.bm25_score} | chunk ${e.chunk_id}`));
+    const rr = e.rerank_score != null ? ` | reranker ${e.rerank_score}` : "";
+    d.appendChild(el("div", "meta", `${e.doc_type} | similarity ${e.dense_score} | bm25 ${e.bm25_score}${rr} | chunk ${e.chunk_id}`));
     if (e.suspicious) d.appendChild(el("div", "flag", "Contains instruction-like text: treated as untrusted data"));
     d.appendChild(el("pre", null, e.text));
     list.appendChild(d);

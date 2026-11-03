@@ -37,7 +37,7 @@ overlap and does not reason about direction.)*
 |---|---|
 | Ingestion of synthetic Snowflake metadata + lineage (JSON), Informatica-style mappings (XML), Markdown runbooks | **Implemented and tested** |
 | Validation, deterministic chunk IDs, provenance, incremental re-ingest, update and delete handling | **Implemented and tested** |
-| Local semantic retrieval: open-source `BAAI/bge-small-en-v1.5` (ONNX, CPU) + SQLite vector store, hybrid BM25 fusion | **Implemented and tested** |
+| Local semantic retrieval: open-source `BAAI/bge-small-en-v1.5` (ONNX, CPU) + SQLite vector store, hybrid BM25 fusion, optional cross-encoder reranking (`ms-marco-MiniLM-L-6-v2`) | **Implemented and tested** |
 | Offline answer mode (extractive, no LLM, no API cost) | **Implemented and tested** |
 | AWS Bedrock generation (Converse API, configurable model) | **Implemented; tested only against stubbed AWS responses.** No live Bedrock call was made during development. |
 | Citation verification, abstention, untrusted-content handling | **Implemented and tested.** The injection detector is a regex heuristic, not a security guarantee; see [Trust boundaries](#trust-boundaries). |
@@ -64,7 +64,8 @@ flowchart LR
     M -- file deleted --> DEL[delete chunks] --> DB
     Q[Question<br/>UI / API / CLI] --> RET[Hybrid retrieval<br/>cosine + BM25, RRF]
     DB --> RET
-    RET --> G{Abstention gate<br/>similarity + term coverage}
+    RET --> RR[Rerank top 10<br/>cross-encoder, optional]
+    RR --> G{Abstention gate<br/>similarity + term coverage<br/>or reranker score}
     G -- fail --> AB[Abstain + show evidence]
     G -- pass --> P[Provider<br/>offline extractive or AWS Bedrock]
     P --> CV[Citation check<br/>labels must match evidence]
@@ -136,6 +137,8 @@ The defaults run the offline demo.
 | `DPKA_RETRIEVAL_MODE` | `hybrid` | `hybrid` or `dense` |
 | `DPKA_TOP_K` | `5` | Evidence chunks per question |
 | `DPKA_MIN_RELEVANCE` / `DPKA_MIN_COVERAGE` | `0.68` / `0.3` | Abstention gate |
+| `DPKA_RERANKER_MODEL` | `Xenova/ms-marco-MiniLM-L-6-v2` | Cross-encoder reranker; `none` disables it (about 80 MB download, ~1 s per question on a laptop CPU) |
+| `DPKA_RERANK_CANDIDATES` / `DPKA_MIN_RERANK_SCORE` | `10` / `0` | Candidates reranked; reranker logit that lets a question the gate rejected be answered |
 | `DPKA_LLM_PROVIDER` | `offline` | `offline` or `bedrock` |
 | `DPKA_BEDROCK_MODEL_ID` | (none) | Required for Bedrock: model ID, inference profile ID, or ARN |
 | `DPKA_LLM_TEMPERATURE` | (unset) | Optional; omitted from the request unless set |
@@ -211,18 +214,24 @@ A reasonable path to AWS, written as guidance rather than a tested runbook:
 
 ## Evaluation
 
-Measured on 2026-10-31 with `bge-small-en-v1.5`, the offline provider and k = 5. Full details,
-per-question output and caveats are in [docs/EVALUATION.md](docs/EVALUATION.md).
+Measured with `bge-small-en-v1.5`, the offline provider and k = 5 (reranking rows on 2026-11-03,
+the rest on 2026-10-31). Full details, per-question output and caveats are in
+[docs/EVALUATION.md](docs/EVALUATION.md).
 
 | Retrieval | Set | Hit@1 | Recall@5 | MRR | Answerable answered | Unanswerable abstained |
 |---|---|---|---|---|---|---|
+| **hybrid + rerank (default)** | dev (26 + 8) | 0.96 | 0.98 | 0.98 | 1.00 | 1.00 |
+| **hybrid + rerank (default)** | holdout (8 + 4) | 0.88 | 0.94 | 0.94 | 0.88 | 1.00 |
 | hybrid | dev (26 + 8) | 0.92 | 0.96 | 0.96 | 1.00 | 1.00 |
 | hybrid | holdout (8 + 4) | 1.00 | 1.00 | 1.00 | 0.75 | 1.00 |
 | dense | dev (26 + 8) | 0.88 | 0.94 | 0.93 | 1.00 | 1.00 |
 | dense | holdout (8 + 4) | 0.75 | 1.00 | 0.88 | 0.88 | 1.00 |
 
 The abstention thresholds were tuned on the dev set, so its 1.00 / 1.00 is in-sample. On the
-holdout set the gate wrongly abstained on 2 of 8 answerable questions. Both sets are small and
+holdout set the gate wrongly abstained on 2 of 8 answerable questions without reranking and 1 of 8
+with it. Reranking helped on the dev set; on the holdout set it answered one more question but
+ranked the labeled source lower on two others, so it is a trade rather than a clear win.
+Reranking also raises retrieval time from about 10 ms to about 1 s per question. Both sets are small and
 author-written over a 12-document synthetic corpus, so they are a regression baseline, not a
 benchmark. No live LLM answer quality was measured.
 
@@ -240,6 +249,9 @@ Run on 2026-10-31 from a clean copy of the project (Windows 11, Python 3.11.18):
 | `python scripts/demo.py` | completed; update re-embedded 1 chunk, deletion removed the mapping from results |
 | `dpka eval` (dev and holdout) | numbers in [Evaluation](#evaluation) |
 | API smoke test (`dpka serve`, real HTTP) | `/api/health`, `/api/ask` (answered and abstained), 422 on empty input, UI `GET /` 200 |
+
+Current test count (2026-11-03, after the reranking change): 91 passed and 3 skipped by default;
+94 passed with `DPKA_RUN_MODEL_TESTS=1`.
 
 GitHub Actions ([first run](https://github.com/vivekdatla96/data-platform-knowledge-assistant/actions/runs/41232054172),
 commit `964e5f2`, Ubuntu): all four jobs passed.

@@ -49,6 +49,21 @@ def test_real_model_answers_and_cites(real_assistant):
     assert res.citations[0]["doc_id"] == "runbooks/incremental_load_fact_orders.md"
 
 
+def test_real_reranker_scores_relevant_passage_higher():
+    from dpka.reranker import FastEmbedReranker
+
+    rr = FastEmbedReranker()
+    scores = rr.score(
+        "How do I backfill FACT_ORDERS for a past date range?",
+        [
+            "Set OVERRIDE_START_TS in AUDIT.ETL_CONTROL to the start of the range, then run "
+            "the session once to backfill DW.FACT_ORDERS.",
+            "WH_ANALYTICS_S is a Small warehouse with a 300 second auto-suspend used for BI.",
+        ],
+    )
+    assert scores[0] > 0 > scores[1]
+
+
 def test_real_model_abstains_on_out_of_corpus_question(real_assistant):
     assert (
         real_assistant.ask("What is the Snowflake account URL for production?").status

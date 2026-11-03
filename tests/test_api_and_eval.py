@@ -60,6 +60,7 @@ def test_evaluate_produces_reproducible_metrics(assistant):
 def test_cli_ingest_and_ask(tmp_path, corpus, capsys, monkeypatch):
     monkeypatch.setenv("DPKA_EMBEDDING_BACKEND", "hashing")
     monkeypatch.setenv("DPKA_MIN_RELEVANCE", "0")
+    monkeypatch.setenv("DPKA_RERANKER_MODEL", "none")  # unit tests never download models
     index = str(tmp_path / "cli.sqlite")
     assert main(["ingest", "--corpus", str(corpus), "--index", index]) == 0
     assert "added=12" in capsys.readouterr().out

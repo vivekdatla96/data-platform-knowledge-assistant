@@ -18,6 +18,7 @@ def _settings(args: argparse.Namespace) -> Settings:
         embedding_backend=getattr(args, "embedder", None),
         retrieval_mode=getattr(args, "mode", None),
         llm_provider=getattr(args, "provider", None),
+        reranker_model="none" if getattr(args, "no_rerank", False) else None,
     )
 
 
@@ -138,6 +139,7 @@ def build_parser() -> argparse.ArgumentParser:
     qa.add_argument("--mode", choices=["dense", "hybrid"], help="retrieval mode")
     qa.add_argument("--provider", choices=["offline", "bedrock"], help="answer provider")
     qa.add_argument("-k", type=int, default=5, help="evidence chunks to retrieve")
+    qa.add_argument("--no-rerank", action="store_true", help="disable cross-encoder reranking")
 
     s = sub.add_parser("ask", parents=[qa], help="answer one question")
     s.add_argument("question", nargs="+")
