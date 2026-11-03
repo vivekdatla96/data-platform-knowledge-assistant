@@ -93,8 +93,19 @@ class Retriever:
         self.bm25 = BM25([tokenize(c.text) for c in self.chunks])
 
     def search(self, query: str, k: int = 5) -> list[RetrievedChunk]:
+        """Final top-k: the hybrid/dense ranking, reranked when a reranker is configured."""
+        return self.search_with_baseline(query, k)[1]
+
+    def search_with_baseline(
+        self, query: str, k: int = 5
+    ) -> tuple[list[RetrievedChunk], list[RetrievedChunk]]:
+        """Return ``(baseline, final)``: the top-k before reranking and the top-k after it.
+
+        Without a reranker both lists are the same. The abstention gate is evaluated on the
+        baseline, so reranking can only add answers, never take away an accepted one.
+        """
         if not self.chunks or not query.strip():
-            return []
+            return [], []
         q = self.embedder.embed_query(query)
         dense = self.matrix @ q
         bm25 = self.bm25.scores(tokenize(query))
@@ -106,18 +117,19 @@ class Retriever:
             fused = 1.0 / (RRF_K + _ranks(dense))
             fused += np.where(bm25 > 0, 1.0 / (RRF_K + _ranks(bm25)), 0.0)
 
+        ranked = np.argsort(-fused, kind="stable")
+        baseline = [
+            RetrievedChunk(self.chunks[i], float(dense[i]), float(bm25[i]), float(fused[i]), r)
+            for r, i in enumerate(ranked[:k], start=1)
+        ]
         if self.reranker is None:
-            top = np.argsort(-fused, kind="stable")[:k]
-            return [
-                RetrievedChunk(self.chunks[i], float(dense[i]), float(bm25[i]), float(fused[i]), r)
-                for r, i in enumerate(top, start=1)
-            ]
+            return baseline, baseline
 
         # Rerank a wider candidate pool with the cross-encoder, then keep the best k.
-        pool = np.argsort(-fused, kind="stable")[: max(k, self.rerank_candidates)]
+        pool = ranked[: max(k, self.rerank_candidates)]
         ce = self.reranker.score(query, [self.chunks[i].text for i in pool])
         order = np.argsort(-ce, kind="stable")[:k]
-        return [
+        final = [
             RetrievedChunk(
                 self.chunks[pool[j]],
                 float(dense[pool[j]]),
@@ -128,6 +140,7 @@ class Retriever:
             )
             for r, j in enumerate(order, start=1)
         ]
+        return baseline, final
 
     def coverage(self, query: str, hits: list[RetrievedChunk]) -> float:
         """IDF-weighted share of the query's content terms that appear in the retrieved text.

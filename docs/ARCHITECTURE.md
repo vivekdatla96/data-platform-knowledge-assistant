@@ -87,7 +87,9 @@ Two signals, both shown in every response under `gate`:
 
 With reranking enabled, a third signal can only *rescue* a question: if the gate above fails but
 the best reranker logit is >= 0 (the model's 50% relevance point, not tuned on this data), the
-question is answered. A low reranker score never rejects a question the gate accepted.
+question is answered. A low reranker score never rejects a question the gate accepted: the first
+gate is computed on the top-k *before* reranking (`Retriever.search_with_baseline`), while the
+reranked top-k is what is shown and cited as evidence.
 
 After the gate, the provider can still answer `INSUFFICIENT_EVIDENCE`, and an answer that cites no
 retrieved evidence is withheld. The thresholds are tuned on the dev set and are known to

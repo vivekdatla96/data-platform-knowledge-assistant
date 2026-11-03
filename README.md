@@ -250,8 +250,8 @@ Run on 2026-10-31 from a clean copy of the project (Windows 11, Python 3.11.18):
 | `dpka eval` (dev and holdout) | numbers in [Evaluation](#evaluation) |
 | API smoke test (`dpka serve`, real HTTP) | `/api/health`, `/api/ask` (answered and abstained), 422 on empty input, UI `GET /` 200 |
 
-Current test count (2026-11-03, after the reranking change): 91 passed and 3 skipped by default;
-94 passed with `DPKA_RUN_MODEL_TESTS=1`.
+Current test count (2026-11-03, after the reranking change): 93 passed and 3 skipped by default;
+96 passed with `DPKA_RUN_MODEL_TESTS=1`.
 
 GitHub Actions ([first run](https://github.com/vivekdatla96/data-platform-knowledge-assistant/actions/runs/41232054172),
 commit `964e5f2`, Ubuntu): all four jobs passed.

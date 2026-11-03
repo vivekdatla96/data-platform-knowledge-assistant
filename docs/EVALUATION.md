@@ -71,13 +71,20 @@ are kept. How the settings were chosen:
   run. It was not tuned: on the dev set the best reranker score of every unanswerable question was
   <= -1.38, while two answerable ones scored -1.02 and -0.79, a margin too thin to tune on.
 * **Rescue only, never veto:** a negative reranker score does not override a question the first
-  gate accepted, because those two answerable dev questions would then have been rejected.
+  gate accepted, because those two answerable dev questions would then have been rejected. The
+  first gate is evaluated on the top 5 *before* reranking, so reranking cannot veto indirectly
+  either, by pushing the strongest dense match out of the evidence. (The first version of this
+  change evaluated the gate on the reranked top 5; Devin's review of PR #5 caught that. The
+  numbers below were re-measured after the fix and did not change, but `h05` is now answered
+  because of the rescue rule, as described, rather than because the reranked evidence happened
+  to include a higher-similarity chunk.)
 
 What it changed:
 
 * **Dev:** Hit@1 0.92 -> 0.96, Recall@5 and MRR 0.96 -> 0.98; abstention unchanged (all
   answered / all abstained).
-* **Holdout:** one more answerable question answered (`h05` was rescued: 6 -> 7 of 8), still
+* **Holdout:** one more answerable question answered (`h05`: pre-rerank similarity 0.67, below
+  0.68, rescued by a reranker score of 3.59; 6 -> 7 of 8), still
   4 of 4 unanswerable abstained, but retrieval got worse on two questions:
   * `h04` (SCD2 change detection): the reranker ranked `snowflake/dw_tables.json` first. Its
     `ROW_HASH` column note does describe change detection, but the label lists the mapping

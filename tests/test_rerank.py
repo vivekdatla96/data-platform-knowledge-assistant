@@ -106,3 +106,34 @@ def test_rerank_settings_validation():
     assert s.reranker_model == "none" and s.rerank_candidates == 3 and s.top_k == 8
     with pytest.raises(ValueError, match="DPKA_RERANK_CANDIDATES"):
         Settings(rerank_candidates=0)
+
+
+def test_reranking_cannot_veto_through_the_evidence_it_selects(indexed, embedder):
+    """Devin review on PR #5: the first gate must use the pre-rerank top-k.
+
+    With k=1 the plain top hit clears the gate. The reranker promotes an off-topic chunk with a
+    negative logit (so no rescue). Judged on that chunk the gate would fail; judged on the
+    baseline it passes, which is the documented behaviour.
+    """
+    q = "Is it safe to rerun a failed FACT_ORDERS session?"
+    gate = {"min_relevance": 0.0, "min_coverage": 0.3, "top_k": 1}
+    rr = KeywordReranker("WH_ANALYTICS_S", hit=-1.0, miss=-5.0)
+    retriever = Retriever(indexed, embedder, reranker=rr, rerank_candidates=54)
+
+    baseline, final = retriever.search_with_baseline(q, k=1)
+    assert "WH_ANALYTICS_S" in final[0].chunk.text
+    assert final[0].chunk.chunk_id != baseline[0].chunk.chunk_id
+    assert retriever.coverage(q, final) < 0.3 <= retriever.coverage(q, baseline)
+
+    res = _assistant(retriever, **gate).ask(q)
+    # The gate must not reject it. (The offline provider may still decline on its own, since the
+    # promoted evidence is off-topic; that is a different, legitimate abstention.)
+    assert not (res.abstain_reason or "").startswith("Insufficient evidence")
+    assert res.gate["term_coverage"] >= 0.3
+    assert "rescued_by_reranker" not in res.gate
+    assert res.evidence[0]["chunk_id"] == final[0].chunk.chunk_id
+
+
+def test_search_returns_identical_lists_without_a_reranker(retriever):
+    baseline, final = retriever.search_with_baseline("backfill FACT_ORDERS", k=5)
+    assert baseline == final == retriever.search("backfill FACT_ORDERS", k=5)

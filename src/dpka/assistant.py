@@ -111,7 +111,9 @@ class Assistant:
             retrieval_mode=self.retriever.mode,
         )
         t0 = time.perf_counter()
-        hits = self.retriever.search(question, k=top_k or self.top_k)
+        # `baseline` is the top-k before reranking (it feeds the first gate); `hits` is the final
+        # top-k shown as evidence. Without a reranker they are identical.
+        baseline, hits = self.retriever.search_with_baseline(question, k=top_k or self.top_k)
 
         labeled = [(f"S{i}", h) for i, h in enumerate(hits, start=1)]
         result.evidence = [_evidence_dict(lab, h) for lab, h in labeled]
@@ -121,8 +123,8 @@ class Assistant:
                 "untrusted data."
             )
 
-        best = max((h.dense_score for h in hits), default=0.0)
-        coverage = self.retriever.coverage(question, hits)
+        best = max((h.dense_score for h in baseline), default=0.0)
+        coverage = self.retriever.coverage(question, baseline)
         result.timings_ms["retrieval"] = round((time.perf_counter() - t0) * 1000, 1)
         result.gate = {"best_similarity": round(best, 4), "term_coverage": round(coverage, 4)}
         passed = best >= self.min_relevance and coverage >= self.min_coverage
@@ -132,8 +134,8 @@ class Assistant:
         )
         rerank = [h.rerank_score for h in hits if h.rerank_score is not None]
         if rerank:
-            # The reranker can only rescue a question the first gate rejected; it never vetoes
-            # one the first gate accepted.
+            # The first gate was decided on the pre-rerank baseline above, so reranking cannot
+            # veto a question it accepted; the reranker score can only rescue a rejected one.
             best_rerank = max(rerank)
             result.gate["best_rerank_score"] = round(best_rerank, 3)
             if not passed and best_rerank >= self.min_rerank_score:

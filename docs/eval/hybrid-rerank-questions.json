@@ -64,7 +64,7 @@
       "status": "answered",
       "gate": {
         "best_similarity": 0.8225,
-        "term_coverage": 0.7116,
+        "term_coverage": 1.0,
         "best_rerank_score": 5.815
       },
       "cited_docs": [
@@ -396,7 +396,7 @@
       "reciprocal_rank": 1.0,
       "status": "answered",
       "gate": {
-        "best_similarity": 0.6955,
+        "best_similarity": 0.7015,
         "term_coverage": 0.5503,
         "best_rerank_score": -1.018
       },
@@ -500,7 +500,7 @@
       "reciprocal_rank": 0.5,
       "status": "answered",
       "gate": {
-        "best_similarity": 0.7027,
+        "best_similarity": 0.709,
         "term_coverage": 0.6734,
         "best_rerank_score": -0.789
       },
@@ -526,7 +526,7 @@
       "status": "answered",
       "gate": {
         "best_similarity": 0.786,
-        "term_coverage": 0.6304,
+        "term_coverage": 0.341,
         "best_rerank_score": 4.314
       },
       "cited_docs": [
@@ -550,7 +550,7 @@
       "status": "answered",
       "gate": {
         "best_similarity": 0.7747,
-        "term_coverage": 0.7995,
+        "term_coverage": 0.6581,
         "best_rerank_score": 3.347
       },
       "cited_docs": [
@@ -723,7 +723,7 @@
       "reciprocal_rank": 0.0,
       "status": "abstained",
       "gate": {
-        "best_similarity": 0.6831,
+        "best_similarity": 0.668,
         "term_coverage": 0.3376,
         "best_rerank_score": -1.375
       },
@@ -747,7 +747,7 @@
       "reciprocal_rank": 0.0,
       "status": "abstained",
       "gate": {
-        "best_similarity": 0.5298,
+        "best_similarity": 0.5484,
         "term_coverage": 0.5487,
         "best_rerank_score": -5.699
       },
@@ -818,7 +818,7 @@
       "reciprocal_rank": 0.0,
       "status": "abstained",
       "gate": {
-        "best_similarity": 0.6339,
+        "best_similarity": 0.6405,
         "term_coverage": 0.039,
         "best_rerank_score": -9.487
       },
